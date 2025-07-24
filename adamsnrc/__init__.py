@@ -6,7 +6,7 @@ from the Nuclear Regulatory Commission's ADAMS (Agencywide Documents Access and
 Management System) database.
 """
 
-__version__ = "2.0.0"
+__version__ = "2.0.3"
 __author__ = "ADAMSNRC Contributors"
 __email__ = "your.email@example.com"
 

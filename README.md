@@ -443,22 +443,61 @@ Your project already has GitHub Actions configured! Here's how to use them:
 2. Navigate to "Secrets and variables" → "Actions"
 3. Add `PYPI_API_TOKEN` with your PyPI API token
 
-### 2. **Create a Release**
+### 2. **Bump Version (Automated)**
+
+Use the included version bumping script to automatically update all version numbers:
 
 ```bash
-# Update version (if needed)
-# Update CHANGELOG.md
-# Commit changes
+# Bump patch version (2.0.0 -> 2.0.1)
+./bump.sh patch
+
+# Bump minor version (2.0.0 -> 2.1.0)
+./bump.sh minor
+
+# Bump major version (2.0.0 -> 3.0.0)
+./bump.sh major
+
+# Dry run to see what would change
+./bump.sh patch --dry-run
+
+# Complete release workflow (bump + git + GitHub release)
+./bump.sh patch --auto-git
+```
+
+The script automatically updates:
+- `pyproject.toml`
+- `setup.py`
+- `adamsnrc/__init__.py`
+- `CHANGELOG.md` (adds new version entry)
+
+**With `--auto-git` flag, it also:**
+- Commits all changes with descriptive message
+- Pushes to main branch
+- Creates and pushes git tag
+- Creates GitHub release (if gh CLI is available)
+
+### 3. **Create a Release (Manual)**
+
+If you didn't use `--auto-git`, run these commands manually:
+
+```bash
+# Commit version changes
 git add .
-git commit -m "feat: prepare for release v2.0.0"
+git commit -m "bump: version 2.0.0 -> 2.0.1"
 git push origin main
 
 # Create and push a tag
-git tag v2.0.0
-git push origin v2.0.0
+git tag v2.0.1
+git push origin v2.0.1
 
 # Create GitHub release (this triggers automatic publishing)
-gh release create v2.0.0 --title "Version 2.0.0" --notes "Initial release"
+gh release create v2.0.1 --title "Version 2.0.1" --notes "Bug fixes and improvements"
+```
+
+**Or use the automated workflow:**
+```bash
+# Complete release workflow in one command
+./bump.sh patch --auto-git
 ```
 
 ## Package Quality Checklist
@@ -480,6 +519,7 @@ Your package is already well-structured with:
 - ✅ Modern `pyproject.toml` configuration
 - ✅ Comprehensive `setup.py` 
 - ✅ Proper `MANIFEST.in` for file inclusion
+- ✅ Automated version bumping script (`bump.sh` and `bump_version.py`)
 - ✅ Detailed `PUBLISHING.md` guide
 - ✅ GitHub Actions workflows
 - ✅ Built distributions in `dist/` directory
