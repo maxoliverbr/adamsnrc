@@ -79,7 +79,15 @@ class ADAMSParseError(ADAMSError):
 
 
 def validate_sort_order(order: str) -> None:
-    """Validate sort order parameter."""
+    """
+    Validate that the sort order parameter is valid.
+    
+    Args:
+        order (str): The sort order to validate (should be 'ASC' or 'DESC')
+        
+    Raises:
+        ADAMSValidationError: If the sort order is not in the list of valid orders
+    """
     if order not in VALID_ORDERS:
         raise ADAMSValidationError(
             ERROR_MESSAGES["invalid_sort_order"].format(
@@ -89,13 +97,30 @@ def validate_sort_order(order: str) -> None:
 
 
 def validate_sort_field(sort: str) -> None:
-    """Validate sort field parameter."""
+    """
+    Validate that the sort field parameter is valid.
+    
+    Args:
+        sort (str): The sort field to validate
+        
+    Note:
+        This function only logs a warning if the sort field is not recognized,
+        rather than raising an exception, as the API may accept additional fields.
+    """
     if sort not in VALID_SORTS:
         logger.warning(f"Sort field '{sort}' not in known valid fields: {VALID_SORTS}")
 
 
 def validate_property_tuple(prop_tuple: tuple) -> None:
-    """Validate a property search tuple."""
+    """
+    Validate that a property search tuple has the correct format.
+    
+    Args:
+        prop_tuple (tuple): A tuple containing (property, operator, value)
+        
+    Raises:
+        ADAMSValidationError: If the tuple format is invalid or contains wrong types
+    """
     if not isinstance(prop_tuple, tuple) or len(prop_tuple) != 3:
         raise ADAMSValidationError(
             ERROR_MESSAGES["invalid_property_tuple"].format(tuple=prop_tuple)
@@ -109,7 +134,15 @@ def validate_property_tuple(prop_tuple: tuple) -> None:
 
 
 def validate_date_range(date_range: tuple[str, str]) -> None:
-    """Validate date range tuple."""
+    """
+    Validate that a date range tuple has the correct format.
+    
+    Args:
+        date_range (tuple[str, str]): A tuple containing (start_date, end_date)
+        
+    Raises:
+        ADAMSValidationError: If the date range format is invalid or contains wrong types
+    """
     if not isinstance(date_range, tuple) or len(date_range) != 2:
         raise ADAMSValidationError(
             ERROR_MESSAGES["invalid_date_range"].format(date_range=date_range)
@@ -126,7 +159,20 @@ def validate_date_range(date_range: tuple[str, str]) -> None:
 
 
 def _kv(prop: str, op: str, value: Any) -> str:
-    """Return one !(prop,op,value,'') item correctly URL-escaped."""
+    """
+    Format a property tuple into ADAMS API format with proper URL escaping.
+    
+    Args:
+        prop (str): The property name to search on
+        op (str): The operator to use (e.g., 'eq', 'starts', 'ends', 'infolder')
+        value (Any): The value to search for (will be converted to string)
+        
+    Returns:
+        str: Formatted string in ADAMS API format: !(prop,op,url_escaped_value,'')
+        
+    Raises:
+        ADAMSValidationError: If there's an error formatting the property tuple
+    """
     try:
         # ADAMS expects + instead of spaces, so quote_plus.
         return f"!({prop},{op},{quote_plus(str(value))},'')"
@@ -137,17 +183,42 @@ def _kv(prop: str, op: str, value: Any) -> str:
 
 
 def _join(items: list[str]) -> str:
-    """Join items with commas."""
+    """
+    Join a list of items with commas.
+    
+    Args:
+        items (list[str]): List of items to join
+        
+    Returns:
+        str: Comma-separated string of the items
+    """
     return ",".join(str(item) for item in items)
 
 
 def _wrap_list(items: list[str]) -> str:
-    """Wrap items in !( ... ) list wrapper."""
+    """
+    Wrap a list of items in ADAMS API list wrapper format.
+    
+    Args:
+        items (list[str]): List of items to wrap
+        
+    Returns:
+        str: Items wrapped in !( ... ) format, or !() if empty
+    """
     return f"!({_join(items)})" if items else "!()"
 
 
 def _filters(public_library: bool = True, legacy_library: bool = False) -> str:
-    """Generate filters string."""
+    """
+    Generate the filters string for ADAMS API queries.
+    
+    Args:
+        public_library (bool, optional): Whether to include public library. Defaults to True.
+        legacy_library (bool, optional): Whether to include legacy library. Defaults to False.
+        
+    Returns:
+        str: Formatted filters string for the ADAMS API
+    """
     flags = []
     if public_library:
         flags.append("public-library:!t")
@@ -165,7 +236,19 @@ def _options(
     within_folder_insubfolder: bool = False,
     within_folder_path: str = "",
 ) -> str:
-    """Generate options string."""
+    """
+    Generate the options string for ADAMS API queries.
+    
+    Args:
+        added_today (bool, optional): Filter for items added today. Defaults to False.
+        added_this_month (bool, optional): Filter for items added this month. Defaults to False.
+        within_folder_enable (bool, optional): Enable within folder search. Defaults to False.
+        within_folder_insubfolder (bool, optional): Include subfolders in search. Defaults to False.
+        within_folder_path (str, optional): Folder path to search within. Defaults to "".
+        
+    Returns:
+        str: Formatted options string for the ADAMS API
+    """
     opts = []
     if added_today:
         opts.append("added-today:!t")
@@ -183,14 +266,33 @@ def _options(
 
 
 def _mode_sections(inner: str) -> str:
-    """Wrap inner content in mode sections."""
+    """
+    Wrap inner content in mode sections format for ADAMS API.
+    
+    Args:
+        inner (str): The inner content to wrap
+        
+    Returns:
+        str: Content wrapped in mode sections format
+    """
     return f"(mode:sections,sections:({inner}))"
 
 
 def _build_query(
     tab: str, sort: Optional[str] = None, order: Optional[str] = None, qn: str = "New"
 ) -> dict[str, str]:
-    """Build query parameters."""
+    """
+    Build query parameters for ADAMS API requests.
+    
+    Args:
+        tab (str): The tab parameter for the API request
+        sort (Optional[str], optional): Sort field. Defaults to None.
+        order (Optional[str], optional): Sort order (ASC/DESC). Defaults to None.
+        qn (str, optional): Query name. Defaults to "New".
+        
+    Returns:
+        dict[str, str]: Dictionary of query parameters
+    """
     params = {
         "tab": tab,
         "qn": qn,
@@ -205,7 +307,18 @@ def _build_query(
 
 
 def _xml_to_dict(xml_text: str) -> SearchResult:
-    """Parse XML response and return structured data."""
+    """
+    Parse XML response from ADAMS API and convert to structured data.
+    
+    Args:
+        xml_text (str): XML response text from the ADAMS API
+        
+    Returns:
+        SearchResult: Structured search results with metadata and results list
+        
+    Raises:
+        ADAMSParseError: If there's an error parsing the XML or unexpected structure
+    """
     try:
         root = ET.fromstring(xml_text)
         results = []
@@ -234,7 +347,19 @@ def _xml_to_dict(xml_text: str) -> SearchResult:
 
 
 def _do_request(query: str, **params) -> SearchResult:
-    """Make HTTP request with retry logic and error handling."""
+    """
+    Make HTTP request to ADAMS API with retry logic and error handling.
+    
+    Args:
+        query (str): The query string for the ADAMS API
+        **params: Additional query parameters to include in the request
+        
+    Returns:
+        SearchResult: Parsed search results from the API response
+        
+    Raises:
+        ADAMSRequestError: If the request fails, times out, or encounters an error
+    """
     for attempt in range(MAX_RETRIES):
         try:
             logger.debug(f"Making request (attempt {attempt + 1}/{MAX_RETRIES})")
@@ -279,22 +404,35 @@ def content_search(
     order: str = "DESC",
 ) -> SearchResult:
     """
-    Content Search (Public Library).
-
+    Perform a content search in the ADAMS public library.
+    
+    This function searches for documents using property-based filters and full-text search.
+    Properties can be combined with AND logic (properties_search) or OR logic (properties_search_any).
+    
     Args:
-        properties_search: List of tuples (prop, op, value) for AND conditions
-        properties_search_any: List of tuples (prop, op, value) for OR conditions
-        single_content_search: Full-text search string
-        sort: Sort field
-        order: Sort order (ASC or DESC)
+        properties_search (Optional[list[tuple[str, str, Any]]], optional): 
+            List of property tuples (property, operator, value) for AND conditions.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        properties_search_any (Optional[list[tuple[str, str, Any]]], optional): 
+            List of property tuples (property, operator, value) for OR conditions.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        single_content_search (str, optional): 
+            Full-text search string to search within document content.
+            Defaults to "".
+        sort (str, optional): 
+            Field to sort results by. Defaults to "DocumentDate".
+        order (str, optional): 
+            Sort order - "ASC" for ascending, "DESC" for descending. Defaults to "DESC".
 
     Returns:
-        SearchResult with metadata and results
+        SearchResult: Object containing search metadata and results list
 
     Raises:
-        ADAMSValidationError: If parameters are invalid
-        ADAMSRequestError: If request fails
-        ADAMSParseError: If response parsing fails
+        ADAMSValidationError: If any parameters are invalid
+        ADAMSRequestError: If the API request fails
+        ADAMSParseError: If the API response cannot be parsed
     """
     try:
         # Validate inputs
@@ -344,28 +482,46 @@ def advanced_search(
     order: str = "ASC",
 ) -> SearchResult:
     """
-    Advanced Search (Public library and/or Legacy library + extra options).
-
+    Perform an advanced search with additional filtering options.
+    
+    This function provides more advanced search capabilities including library selection,
+    date-based filtering, and folder-based searching in addition to property-based search.
+    
     Args:
-        properties_search_all: List of tuples (prop, op, value) for AND conditions
-        properties_search_any: List of tuples (prop, op, value) for OR conditions
-        public_library: Include public library
-        legacy_library: Include legacy library
-        added_today: Filter for items added today
-        added_this_month: Filter for items added this month
-        within_folder_enable: Enable within folder search
-        within_folder_insubfolder: Include subfolders
-        within_folder_path: Folder path to search within
-        sort: Sort field
-        order: Sort order (ASC or DESC)
+        properties_search_all (Optional[list[tuple[str, str, Any]]], optional): 
+            List of property tuples (property, operator, value) for AND conditions.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        properties_search_any (Optional[list[tuple[str, str, Any]]], optional): 
+            List of property tuples (property, operator, value) for OR conditions.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        public_library (bool, optional): 
+            Whether to search in the public library. Defaults to True.
+        legacy_library (bool, optional): 
+            Whether to search in the legacy library. Defaults to False.
+        added_today (bool, optional): 
+            Filter for items added today. Defaults to False.
+        added_this_month (bool, optional): 
+            Filter for items added this month. Defaults to False.
+        within_folder_enable (bool, optional): 
+            Enable within folder search. Defaults to False.
+        within_folder_insubfolder (bool, optional): 
+            Include subfolders when searching within a folder. Defaults to False.
+        within_folder_path (str, optional): 
+            Folder path to search within. Defaults to "".
+        sort (str, optional): 
+            Field to sort results by. Defaults to "$title".
+        order (str, optional): 
+            Sort order - "ASC" for ascending, "DESC" for descending. Defaults to "ASC".
 
     Returns:
-        SearchResult with metadata and results
+        SearchResult: Object containing search metadata and results list
 
     Raises:
-        ADAMSValidationError: If parameters are invalid
-        ADAMSRequestError: If request fails
-        ADAMSParseError: If response parsing fails
+        ADAMSValidationError: If any parameters are invalid
+        ADAMSRequestError: If the API request fails
+        ADAMSParseError: If the API response cannot be parsed
     """
     try:
         # Validate inputs
@@ -415,17 +571,35 @@ def part21_search_content(
     order: str = "DESC",
 ) -> SearchResult:
     """
-    Part 21 via Content Search.
-
+    Search for Part 21 Correspondence documents using content search.
+    
+    This function is a convenience wrapper around content_search that automatically
+    filters for Part 21 Correspondence documents.
+    
     Args:
-        extra_and: Additional AND conditions
-        extra_or: Additional OR conditions
-        text: Full-text search string
-        sort: Sort field
-        order: Sort order (ASC or DESC)
+        extra_and (Optional[list[tuple[str, str, Any]]], optional): 
+            Additional property tuples for AND conditions beyond the base Part 21 filter.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        extra_or (Optional[list[tuple[str, str, Any]]], optional): 
+            Additional property tuples for OR conditions.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        text (str, optional): 
+            Full-text search string to search within document content.
+            Defaults to "".
+        sort (str, optional): 
+            Field to sort results by. Defaults to "$size".
+        order (str, optional): 
+            Sort order - "ASC" for ascending, "DESC" for descending. Defaults to "DESC".
 
     Returns:
-        SearchResult with metadata and results
+        SearchResult: Object containing search metadata and results list
+
+    Raises:
+        ADAMSValidationError: If any parameters are invalid
+        ADAMSRequestError: If the API request fails
+        ADAMSParseError: If the API response cannot be parsed
     """
     base = [("DocumentType", "ends", "Part 21 Correspondence")]
     return content_search(
@@ -445,17 +619,36 @@ def part21_search_advanced(
     order: str = "ASC",
 ) -> SearchResult:
     """
-    Part 21 via Advanced Search.
-
+    Search for Part 21 Correspondence documents using advanced search.
+    
+    This function is a convenience wrapper around advanced_search that automatically
+    filters for Part 21 Correspondence documents and supports date range filtering.
+    
     Args:
-        extra_all: Additional AND conditions
-        extra_any: Additional OR conditions
-        date_range: Tuple (start_date, end_date) for date filtering
-        sort: Sort field
-        order: Sort order (ASC or DESC)
+        extra_all (Optional[list[tuple[str, str, Any]]], optional): 
+            Additional property tuples for AND conditions beyond the base Part 21 filter.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        extra_any (Optional[list[tuple[str, str, Any]]], optional): 
+            Additional property tuples for OR conditions.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        date_range (Optional[tuple[str, str]], optional): 
+            Date range tuple (start_date, end_date) for filtering by publish date.
+            Both dates should be strings in a format accepted by the ADAMS API.
+            Defaults to None.
+        sort (str, optional): 
+            Field to sort results by. Defaults to "$title".
+        order (str, optional): 
+            Sort order - "ASC" for ascending, "DESC" for descending. Defaults to "ASC".
 
     Returns:
-        SearchResult with metadata and results
+        SearchResult: Object containing search metadata and results list
+
+    Raises:
+        ADAMSValidationError: If any parameters are invalid
+        ADAMSRequestError: If the API request fails
+        ADAMSParseError: If the API response cannot be parsed
     """
     try:
         if date_range:
@@ -511,17 +704,35 @@ def operating_reactor_ir_search_content(
     order: str = "DESC",
 ) -> SearchResult:
     """
-    Operating Reactor Inspection Reports via Content Search.
-
+    Search for Operating Reactor Inspection Reports using content search.
+    
+    This function is a convenience wrapper around content_search that automatically
+    filters for inspection reports from operating reactors (DocketNumber starting with 05000).
+    
     Args:
-        extra_and: Additional AND conditions
-        extra_or: Additional OR conditions
-        text: Full-text search string
-        sort: Sort field
-        order: Sort order (ASC or DESC)
+        extra_and (Optional[list[tuple[str, str, Any]]], optional): 
+            Additional property tuples for AND conditions beyond the base inspection report filter.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        extra_or (Optional[list[tuple[str, str, Any]]], optional): 
+            Additional property tuples for OR conditions.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        text (str, optional): 
+            Full-text search string to search within document content.
+            Defaults to "".
+        sort (str, optional): 
+            Field to sort results by. Defaults to "$size".
+        order (str, optional): 
+            Sort order - "ASC" for ascending, "DESC" for descending. Defaults to "DESC".
 
     Returns:
-        SearchResult with metadata and results
+        SearchResult: Object containing search metadata and results list
+
+    Raises:
+        ADAMSValidationError: If any parameters are invalid
+        ADAMSRequestError: If the API request fails
+        ADAMSParseError: If the API response cannot be parsed
     """
     base = [
         ("DocumentType", "infolder", "inspection report"),
@@ -544,17 +755,35 @@ def operating_reactor_ir_search_advanced(
     order: str = "ASC",
 ) -> SearchResult:
     """
-    Operating Reactor Inspection Reports via Advanced Search.
-
+    Search for Operating Reactor Inspection Reports using advanced search.
+    
+    This function is a convenience wrapper around advanced_search that automatically
+    filters for inspection reports from operating reactors (DocketNumber starting with 05000)
+    and supports date range filtering.
+    
     Args:
-        extra_all: Additional AND conditions
-        extra_any: Additional OR conditions
-        date_range: Tuple (start_date, end_date) for date filtering
-        sort: Sort field
-        order: Sort order (ASC or DESC)
+        extra_all (Optional[list[tuple[str, str, Any]]], optional): 
+            Additional property tuples for AND conditions beyond the base inspection report filter.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        extra_any (Optional[list[tuple[str, str, Any]]], optional): 
+            Additional property tuples for OR conditions.
+            Each tuple should contain (property_name, operator, search_value).
+            Defaults to None.
+        date_range (Optional[tuple[str, str]], optional): 
+            Date range tuple (start_date, end_date) for filtering by publish date.
+            Both dates should be strings in a format accepted by the ADAMS API.
+            Defaults to None.
+        sort (str, optional): 
+            Field to sort results by. Defaults to "$title".
+        order (str, optional): 
+            Sort order - "ASC" for ascending, "DESC" for descending. Defaults to "ASC".
 
     Returns:
-        SearchResult with metadata and results
+        SearchResult: Object containing search metadata and results list
+
+    Raises:
+        ADAMSError: If any parameters are invalid or an unexpected error occurs
     """
     try:
         if date_range:
