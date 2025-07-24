@@ -16,7 +16,7 @@ def main():
         print("\n1. Simple content search:")
         result = content_search(
             properties_search=[("DocumentType", "ends", "NUREG")],
-            single_content_search="steam generator",
+            single_content_search="early site permit",
             sort="DocumentDate",
             order="DESC"
         )
