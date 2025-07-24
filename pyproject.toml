@@ -80,7 +80,6 @@ exclude = [
 ]
 
 [tool.ruff]
-target-version = "2.0.4"
 line-length = 88
 
 [tool.ruff.lint]
