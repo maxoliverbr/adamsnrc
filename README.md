@@ -1,5 +1,11 @@
 # ADAMSNRC API Client
 
+This code was created by ChatGPT and Cursor. On ChatGPT the pdf with the API documentation was uploaded and simple prompt sent: "create simple python code to interface each endpoint on adams library api".
+
+With the code generated I switched to Cursor, set model to Any and started vibe coding.
+
+The result after many interactions and minor code edits is this package. 
+
 A robust Python client for the Nuclear Regulatory Commission's ADAMS (Agencywide Documents Access and Management System) API.
 
 ## Features
