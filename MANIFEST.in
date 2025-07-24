@@ -23,4 +23,14 @@ global-exclude .mypy_cache
 global-exclude .tox
 global-exclude build
 global-exclude dist
-global-exclude *.egg-info 
+global-exclude *.egg-info
+
+# Exclude virtual environments
+global-exclude .venv
+global-exclude .venv/*
+global-exclude venv
+global-exclude venv/*
+global-exclude env
+global-exclude env/*
+global-exclude ENV
+global-exclude ENV/* 

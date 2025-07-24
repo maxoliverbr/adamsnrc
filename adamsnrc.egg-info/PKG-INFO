@@ -3,14 +3,14 @@ Name: adamsnrc
 Version: 2.0.0
 Summary: A robust Python client for the Nuclear Regulatory Commission's ADAMS API
 Home-page: https://github.com/yourusername/adamsnrc
-Author: Your Name
-Author-email: Your Name <your.email@example.com>
-Maintainer-email: Your Name <your.email@example.com>
+Author: Max Oliver
+Author-email: Max Oliver <max.oliver@cintrax.com.br>
+Maintainer-email: Max Oliver <max.oliver@cintrax.com.br>
 License: MIT
-Project-URL: Homepage, https://github.com/yourusername/adamsnrc
+Project-URL: Homepage, https://github.com/maxoliverbr/adamsnrc
 Project-URL: Documentation, https://adamsnrc.readthedocs.io/
-Project-URL: Repository, https://github.com/yourusername/adamsnrc
-Project-URL: Bug Tracker, https://github.com/yourusername/adamsnrc/issues
+Project-URL: Repository, https://github.com/maxoliverbr/adamsnrc
+Project-URL: Bug Tracker, https://github.com/maxoliverbr/adamsnrc/issues
 Keywords: adams,nrc,nuclear,regulatory,api,client,documents
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
@@ -375,3 +375,168 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Improved documentation and examples
 - Added logging support
 - Made the code more maintainable and robust 
+
+## How to Build and Publish Your Package to PyPI
+
+Your project is already well-prepared for PyPI distribution! Here's the complete process:
+
+### 1. **Prerequisites Setup**
+
+First, ensure you have the necessary tools and accounts:
+
+```bash
+# Install build tools
+pip install build twine
+
+# Create PyPI account at https://pypi.org/account/register/
+# Create TestPyPI account at https://test.pypi.org/account/register/
+```
+
+### 2. **Configure PyPI Credentials**
+
+Create a `~/.pypirc` file in your home directory:
+
+```ini
+[distutils]
+index-servers =
+    pypi
+    testpypi
+
+[pypi]
+username = __token__
+password = pypi-your-api-token-here
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = __token__
+password = pypi-your-test-api-token-here
+```
+
+### 3. **Update Package Information**
+
+Before publishing, you need to update the placeholder information in your configuration files:
+
+**In `pyproject.toml`:**
+```toml
+authors = [
+    {name = "Your Actual Name", email = "your.actual.email@example.com"}
+]
+maintainers = [
+    {name = "Your Actual Name", email = "your.actual.email@example.com"}
+]
+```
+
+**In `setup.py`:**
+```python
+author="Your Actual Name",
+author_email="your.actual.email@example.com",
+url="https://github.com/your-actual-username/adamsnrc",
+```
+
+**Update URLs in both files:**
+- Replace `yourusername` with your actual GitHub username
+- Update documentation URLs if you have them
+
+### 4. **Build the Package**
+
+```bash
+# Clean previous builds (optional)
+rm -rf build/ dist/ *.egg-info/
+
+# Build the package
+python -m build
+```
+
+This will create:
+- `dist/adamsnrc-2.0.0.tar.gz` (source distribution)
+- `dist/adamsnrc-2.0.0-py3-none-any.whl` (wheel distribution)
+
+### 5. **Test on TestPyPI (Recommended)**
+
+```bash
+# Upload to TestPyPI first
+twine upload --repository testpypi dist/*
+
+# Test installation from TestPyPI
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ adamsnrc
+
+# Test the package
+python -c "import adamsnrc; print(adamsnrc.__version__)"
+```
+
+### 6. **Publish to PyPI**
+
+```bash
+<code_block_to_apply_changes_from>
+```
+
+### 7. **Verify the Publication**
+
+```bash
+# Install from PyPI
+pip install adamsnrc
+
+# Test the package
+python -c "import adamsnrc; print(adamsnrc.__version__)"
+```
+
+## Automated Publishing with GitHub Actions
+
+Your project already has GitHub Actions configured! Here's how to use them:
+
+### 1. **Set up GitHub Secrets**
+
+1. Go to your repository settings
+2. Navigate to "Secrets and variables" → "Actions"
+3. Add `PYPI_API_TOKEN` with your PyPI API token
+
+### 2. **Create a Release**
+
+```bash
+# Update version (if needed)
+# Update CHANGELOG.md
+# Commit changes
+git add .
+git commit -m "feat: prepare for release v2.0.0"
+git push origin main
+
+# Create and push a tag
+git tag v2.0.0
+git push origin v2.0.0
+
+# Create GitHub release (this triggers automatic publishing)
+gh release create v2.0.0 --title "Version 2.0.0" --notes "Initial release"
+```
+
+## Package Quality Checklist
+
+Before publishing, ensure:
+
+✅ **Configuration Files**: `pyproject.toml`, `setup.py`, `MANIFEST.in` are properly configured  
+✅ **Documentation**: README.md is comprehensive and up-to-date  
+✅ **Dependencies**: All required packages are listed in dependencies  
+✅ **Version**: Version is consistent across all files  
+✅ **License**: MIT license is included  
+✅ **Tests**: Test suite passes  
+✅ **Code Quality**: Linting and type checking pass  
+
+## Your Package is Ready!
+
+Your package is already well-structured with:
+
+- ✅ Modern `pyproject.toml` configuration
+- ✅ Comprehensive `setup.py` 
+- ✅ Proper `MANIFEST.in` for file inclusion
+- ✅ Detailed `PUBLISHING.md` guide
+- ✅ GitHub Actions workflows
+- ✅ Built distributions in `dist/` directory
+- ✅ Professional README.md
+- ✅ Proper package structure
+
+The main steps you need to take are:
+1. Update the placeholder information (name, email, URLs)
+2. Get PyPI API tokens
+3. Configure `~/.pypirc`
+4. Build and upload
+
+Your package will be available at `https://pypi.org/project/adamsnrc/` once published! 

@@ -416,7 +416,11 @@ python -c "import adamsnrc; print(adamsnrc.__version__)"
 ### 6. **Publish to PyPI**
 
 ```bash
-<code_block_to_apply_changes_from>
+# Upload to PyPI
+twine upload dist/*
+
+# Or upload specific files
+twine upload dist/adamsnrc-2.0.0.tar.gz dist/adamsnrc-2.0.0-py3-none-any.whl
 ```
 
 ### 7. **Verify the Publication**
