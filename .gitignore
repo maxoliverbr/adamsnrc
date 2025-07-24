@@ -281,3 +281,5 @@ settings_local.py
 
 # PDF files (if not needed in repo)
 *.pdf 
+
+*/__pycache__/

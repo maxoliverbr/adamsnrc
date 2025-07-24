@@ -90,7 +90,7 @@ def validate_sort_field(sort: str) -> None:
         logger.warning(f"Sort field '{sort}' not in known valid fields: {VALID_SORTS}")
 
 
-def validate_property_tuple(prop_tuple: Tuple) -> None:
+def validate_property_tuple(prop_tuple: tuple) -> None:
     """Validate a property search tuple."""
     if not isinstance(prop_tuple, tuple) or len(prop_tuple) != 3:
         raise ADAMSValidationError(
