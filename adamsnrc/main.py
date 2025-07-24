@@ -222,7 +222,9 @@ def _xml_to_dict(xml_text: str) -> SearchResult:
         return SearchResult(meta=meta, results=results)
 
     except ET.ParseError as e:
-        raise ADAMSParseError(ERROR_MESSAGES["xml_parse_error"].format(error=str(e))) from e
+        raise ADAMSParseError(
+            ERROR_MESSAGES["xml_parse_error"].format(error=str(e))
+        ) from e
     except Exception as e:
         raise ADAMSParseError(f"Unexpected error parsing XML: {e}") from e
 
@@ -583,7 +585,6 @@ def operating_reactor_ir_search_advanced(
         params = _build_query("advanced-search-pars", sort, order)
         return _do_request(q, **params)
 
-            
     except Exception as e:
         raise ADAMSError(
             f"Unexpected error in operating_reactor_ir_search_advanced: {e}"
