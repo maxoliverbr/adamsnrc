@@ -12,48 +12,42 @@ __email__ = "your.email@example.com"
 
 # Import main API functions
 from .main import (
-    # Core search functions
-    content_search,
-    advanced_search,
-    
-    # Specialized search functions
-    part21_search_content,
-    part21_search_advanced,
-    operating_reactor_ir_search_content,
-    operating_reactor_ir_search_advanced,
-    
-    # Data structures
-    SearchResult,
-    
     # Exception classes
     ADAMSError,
+    ADAMSParseError,
     ADAMSRequestError,
     ADAMSValidationError,
-    ADAMSParseError,
+    # Data structures
+    SearchResult,
+    advanced_search,
+    # Core search functions
+    content_search,
+    operating_reactor_ir_search_advanced,
+    operating_reactor_ir_search_content,
+    part21_search_advanced,
+    # Specialized search functions
+    part21_search_content,
 )
 
 # Import utility functions
 from .utils import (
     # Date and time utilities
     build_date_range,
-    validate_and_format_date,
-    
-    # Text processing
-    sanitize_string,
+    build_search_query,
+    calculate_result_stats,
     escape_special_chars,
-    normalize_whitespace,
-    truncate_text,
-    
-    # Document utilities
-    validate_docket_number,
-    format_docket_number,
-    
     # Result processing
     extract_metadata_from_result,
     filter_results_by_date,
+    format_docket_number,
     group_results_by_field,
-    calculate_result_stats,
-    build_search_query,
+    normalize_whitespace,
+    # Text processing
+    sanitize_string,
+    truncate_text,
+    validate_and_format_date,
+    # Document utilities
+    validate_docket_number,
 )
 
 # Define what gets imported with "from adamsnrc import *"
@@ -65,16 +59,13 @@ __all__ = [
     "part21_search_advanced",
     "operating_reactor_ir_search_content",
     "operating_reactor_ir_search_advanced",
-    
     # Data structures
     "SearchResult",
-    
     # Exceptions
     "ADAMSError",
     "ADAMSRequestError",
     "ADAMSValidationError",
     "ADAMSParseError",
-    
     # Utilities
     "build_date_range",
     "validate_and_format_date",

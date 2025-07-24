@@ -61,11 +61,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev]"
     
-    - name: Run black
-      run: black --check --diff adamsnrc/
+    - name: Run ruff format check
+      run: ruff format --check adamsnrc/
     
-    - name: Run flake8
-      run: flake8 adamsnrc/
+    - name: Run ruff lint
+      run: ruff check adamsnrc/
     
     - name: Run mypy
       run: mypy adamsnrc/

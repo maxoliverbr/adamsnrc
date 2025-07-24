@@ -510,7 +510,7 @@ Before publishing, ensure:
 ✅ **Version**: Version is consistent across all files  
 ✅ **License**: MIT license is included  
 ✅ **Tests**: Test suite passes  
-✅ **Code Quality**: Linting and type checking pass  
+✅ **Code Quality**: Ruff linting and formatting pass  
 
 ## Your Package is Ready!
 

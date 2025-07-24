@@ -1,11 +1,14 @@
 """
 Configuration settings for the ADAMS API client.
 """
+
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 # API Configuration
-BASE_URL = os.getenv("ADAMS_BASE_URL", "https://adams.nrc.gov/wba/services/search/advanced/nrc")
+BASE_URL = os.getenv(
+    "ADAMS_BASE_URL", "https://adams.nrc.gov/wba/services/search/advanced/nrc"
+)
 DEFAULT_TIMEOUT = int(os.getenv("ADAMS_TIMEOUT", "60"))
 MAX_RETRIES = int(os.getenv("ADAMS_MAX_RETRIES", "3"))
 RETRY_DELAY = float(os.getenv("ADAMS_RETRY_DELAY", "1.0"))
@@ -17,8 +20,15 @@ LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 # Validation Configuration
 VALID_ORDERS = {"ASC", "DESC"}
 VALID_SORTS = {
-    "DocumentDate", "$title", "$size", "AuthorName", "DocumentType", 
-    "PublishDatePARS", "DocketNumber", "AccessionNumber", "Subject"
+    "DocumentDate",
+    "$title",
+    "$size",
+    "AuthorName",
+    "DocumentType",
+    "PublishDatePARS",
+    "DocketNumber",
+    "AccessionNumber",
+    "Subject",
 }
 
 # Search Configuration
@@ -45,6 +55,7 @@ ERROR_MESSAGES = {
     "validation_error": "Validation error: {error}",
 }
 
+
 def get_config() -> Dict[str, Any]:
     """Get all configuration settings as a dictionary."""
     return {
@@ -62,4 +73,4 @@ def get_config() -> Dict[str, Any]:
         "default_qn": DEFAULT_QN,
         "default_headers": DEFAULT_HEADERS,
         "error_messages": ERROR_MESSAGES,
-    } 
+    }
