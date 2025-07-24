@@ -2,7 +2,7 @@ import logging
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 from urllib.parse import quote_plus
 
 import requests
@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 class SearchResult:
     """Container for search results with metadata."""
 
-    meta: Dict[str, str]
-    results: List[Dict[str, str]]
+    meta: dict[str, str]
+    results: list[dict[str, str]]
 
     @property
     def count(self) -> int:
@@ -104,7 +104,7 @@ def validate_property_tuple(prop_tuple: Tuple) -> None:
         )
 
 
-def validate_date_range(date_range: Tuple[str, str]) -> None:
+def validate_date_range(date_range: tuple[str, str]) -> None:
     """Validate date range tuple."""
     if not isinstance(date_range, tuple) or len(date_range) != 2:
         raise ADAMSValidationError(
@@ -129,15 +129,15 @@ def _kv(prop: str, op: str, value: Any) -> str:
     except Exception as e:
         raise ADAMSValidationError(
             f"Error formatting property tuple ({prop}, {op}, {value}): {e}"
-        )
+        ) from e
 
 
-def _join(items: List[str]) -> str:
+def _join(items: list[str]) -> str:
     """Join items with commas."""
     return ",".join(str(item) for item in items)
 
 
-def _wrap_list(items: List[str]) -> str:
+def _wrap_list(items: list[str]) -> str:
     """Wrap items in !( ... ) list wrapper."""
     return f"!({_join(items)})" if items else "!()"
 
@@ -185,7 +185,7 @@ def _mode_sections(inner: str) -> str:
 
 def _build_query(
     tab: str, sort: Optional[str] = None, order: Optional[str] = None, qn: str = "New"
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Build query parameters."""
     params = {
         "tab": tab,
@@ -222,9 +222,9 @@ def _xml_to_dict(xml_text: str) -> SearchResult:
         return SearchResult(meta=meta, results=results)
 
     except ET.ParseError as e:
-        raise ADAMSParseError(ERROR_MESSAGES["xml_parse_error"].format(error=str(e)))
+        raise ADAMSParseError(ERROR_MESSAGES["xml_parse_error"].format(error=str(e))) from e
     except Exception as e:
-        raise ADAMSParseError(f"Unexpected error parsing XML: {e}")
+        raise ADAMSParseError(f"Unexpected error parsing XML: {e}") from e
 
 
 def _do_request(query: str, **params) -> SearchResult:
@@ -249,15 +249,15 @@ def _do_request(query: str, **params) -> SearchResult:
             else:
                 raise ADAMSRequestError(
                     ERROR_MESSAGES["request_timeout"].format(max_retries=MAX_RETRIES)
-                )
+                ) from None
 
         except RequestException as e:
             raise ADAMSRequestError(
                 ERROR_MESSAGES["request_failed"].format(error=str(e))
-            )
+            ) from e
 
         except Exception as e:
-            raise ADAMSRequestError(f"Unexpected error during request: {e}")
+            raise ADAMSRequestError(f"Unexpected error during request: {e}") from e
 
 
 # ---------------------------
@@ -266,8 +266,8 @@ def _do_request(query: str, **params) -> SearchResult:
 
 
 def content_search(
-    properties_search: Optional[List[Tuple[str, str, Any]]] = None,
-    properties_search_any: Optional[List[Tuple[str, str, Any]]] = None,
+    properties_search: Optional[list[tuple[str, str, Any]]] = None,
+    properties_search_any: Optional[list[tuple[str, str, Any]]] = None,
     single_content_search: str = "",
     sort: str = "DocumentDate",
     order: str = "DESC",
@@ -321,12 +321,12 @@ def content_search(
     except ADAMSError:
         raise
     except Exception as e:
-        raise ADAMSError(f"Unexpected error in content_search: {e}")
+        raise ADAMSError(f"Unexpected error in content_search: {e}") from e
 
 
 def advanced_search(
-    properties_search_all: Optional[List[Tuple[str, str, Any]]] = None,
-    properties_search_any: Optional[List[Tuple[str, str, Any]]] = None,
+    properties_search_all: Optional[list[tuple[str, str, Any]]] = None,
+    properties_search_any: Optional[list[tuple[str, str, Any]]] = None,
     public_library: bool = True,
     legacy_library: bool = False,
     added_today: bool = False,
@@ -398,12 +398,12 @@ def advanced_search(
     except ADAMSError:
         raise
     except Exception as e:
-        raise ADAMSError(f"Unexpected error in advanced_search: {e}")
+        raise ADAMSError(f"Unexpected error in advanced_search: {e}") from e
 
 
 def part21_search_content(
-    extra_and: Optional[List[Tuple[str, str, Any]]] = None,
-    extra_or: Optional[List[Tuple[str, str, Any]]] = None,
+    extra_and: Optional[list[tuple[str, str, Any]]] = None,
+    extra_or: Optional[list[tuple[str, str, Any]]] = None,
     text: str = "",
     sort: str = "$size",
     order: str = "DESC",
@@ -432,9 +432,9 @@ def part21_search_content(
 
 
 def part21_search_advanced(
-    extra_all: Optional[List[Tuple[str, str, Any]]] = None,
-    extra_any: Optional[List[Tuple[str, str, Any]]] = None,
-    date_range: Optional[Tuple[str, str]] = None,
+    extra_all: Optional[list[tuple[str, str, Any]]] = None,
+    extra_any: Optional[list[tuple[str, str, Any]]] = None,
+    date_range: Optional[tuple[str, str]] = None,
     sort: str = "$title",
     order: str = "ASC",
 ) -> SearchResult:
@@ -494,12 +494,12 @@ def part21_search_advanced(
     except ADAMSError:
         raise
     except Exception as e:
-        raise ADAMSError(f"Unexpected error in part21_search_advanced: {e}")
+        raise ADAMSError(f"Unexpected error in part21_search_advanced: {e}") from e
 
 
 def operating_reactor_ir_search_content(
-    extra_and: Optional[List[Tuple[str, str, Any]]] = None,
-    extra_or: Optional[List[Tuple[str, str, Any]]] = None,
+    extra_and: Optional[list[tuple[str, str, Any]]] = None,
+    extra_or: Optional[list[tuple[str, str, Any]]] = None,
     text: str = "",
     sort: str = "$size",
     order: str = "DESC",
@@ -531,9 +531,9 @@ def operating_reactor_ir_search_content(
 
 
 def operating_reactor_ir_search_advanced(
-    extra_all: Optional[List[Tuple[str, str, Any]]] = None,
-    extra_any: Optional[List[Tuple[str, str, Any]]] = None,
-    date_range: Optional[Tuple[str, str]] = None,
+    extra_all: Optional[list[tuple[str, str, Any]]] = None,
+    extra_any: Optional[list[tuple[str, str, Any]]] = None,
+    date_range: Optional[tuple[str, str]] = None,
     sort: str = "$title",
     order: str = "ASC",
 ) -> SearchResult:
@@ -583,12 +583,11 @@ def operating_reactor_ir_search_advanced(
         params = _build_query("advanced-search-pars", sort, order)
         return _do_request(q, **params)
 
-    except ADAMSError:
-        raise
+            
     except Exception as e:
         raise ADAMSError(
             f"Unexpected error in operating_reactor_ir_search_advanced: {e}"
-        )
+        ) from e
 
 
 # ---------------------------

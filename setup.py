@@ -2,19 +2,20 @@
 """
 Setup script for ADAMSNRC Python package.
 """
-from setuptools import setup, find_packages
-import os
+
+from setuptools import find_packages, setup
+
 
 # Read the README file for long description
 def read_readme():
     """Read README.md file."""
-    with open("README.md", "r", encoding="utf-8") as fh:
+    with open("README.md", encoding="utf-8") as fh:
         return fh.read()
 
 # Read requirements from requirements.txt
 def read_requirements():
     """Read requirements from requirements.txt file."""
-    with open("requirements.txt", "r", encoding="utf-8") as fh:
+    with open("requirements.txt", encoding="utf-8") as fh:
         return [line.strip() for line in fh if line.strip() and not line.startswith("#")]
 
 setup(
@@ -28,7 +29,7 @@ setup(
     url="https://github.com/yourusername/adamsnrc",
     packages=find_packages(exclude=[
         "*.tests*",
-        "*.test*", 
+        "*.test*",
         "tests*",
         "test*",
         "venv*",
@@ -87,4 +88,4 @@ setup(
         "Source": "https://github.com/maxoliverbr/adamsnrc",
         "Documentation": "https://adamsnrc.readthedocs.io/",
     },
-) 
+)

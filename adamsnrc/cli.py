@@ -6,7 +6,6 @@ Command-line interface for ADAMSNRC.
 import argparse
 import json
 import sys
-from typing import Dict, List
 
 from .main import (
     ADAMSError,
@@ -21,7 +20,7 @@ from .main import (
 from .utils import build_date_range, calculate_result_stats
 
 
-def format_output(results: List[Dict[str, str]], format_type: str = "table") -> str:
+def format_output(results: list[dict[str, str]], format_type: str = "table") -> str:
     """Format search results for output."""
     if format_type == "json":
         return json.dumps(results, indent=2)

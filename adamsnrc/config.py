@@ -3,7 +3,7 @@ Configuration settings for the ADAMS API client.
 """
 
 import os
-from typing import Any, Dict
+from typing import Any
 
 # API Configuration
 BASE_URL = os.getenv(
@@ -56,7 +56,7 @@ ERROR_MESSAGES = {
 }
 
 
-def get_config() -> Dict[str, Any]:
+def get_config() -> dict[str, Any]:
     """Get all configuration settings as a dictionary."""
     return {
         "base_url": BASE_URL,

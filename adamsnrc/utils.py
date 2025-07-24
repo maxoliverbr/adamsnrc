@@ -4,7 +4,7 @@ Utility functions for the ADAMS API client.
 
 import re
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 
 def sanitize_string(value: Any) -> str:
@@ -43,7 +43,7 @@ def build_date_range(
     start_date: Union[str, date, datetime],
     end_date: Union[str, date, datetime],
     format_str: str = "%m/%d/%Y %I:%M %p",
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Build a properly formatted date range tuple.
 
@@ -133,7 +133,7 @@ def format_docket_number(docket: str) -> str:
 
 
 def build_search_query(
-    properties: List[Tuple[str, str, Any]], operator: str = "AND"
+    properties: list[tuple[str, str, Any]], operator: str = "AND"
 ) -> str:
     """
     Build a search query string from property tuples.
@@ -157,7 +157,7 @@ def build_search_query(
     return f" {operator} ".join(formatted_props)
 
 
-def extract_metadata_from_result(result: Dict[str, str]) -> Dict[str, Any]:
+def extract_metadata_from_result(result: dict[str, str]) -> dict[str, Any]:
     """
     Extract and parse metadata from a search result.
 
@@ -191,11 +191,11 @@ def extract_metadata_from_result(result: Dict[str, str]) -> Dict[str, Any]:
 
 
 def filter_results_by_date(
-    results: List[Dict[str, str]],
+    results: list[dict[str, str]],
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     date_field: str = "DocumentDate",
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """
     Filter search results by date range.
 
@@ -237,8 +237,8 @@ def filter_results_by_date(
 
 
 def group_results_by_field(
-    results: List[Dict[str, str]], field: str
-) -> Dict[str, List[Dict[str, str]]]:
+    results: list[dict[str, str]], field: str
+) -> dict[str, list[dict[str, str]]]:
     """
     Group search results by a specific field.
 
@@ -260,7 +260,7 @@ def group_results_by_field(
     return grouped
 
 
-def calculate_result_stats(results: List[Dict[str, str]]) -> Dict[str, Any]:
+def calculate_result_stats(results: list[dict[str, str]]) -> dict[str, Any]:
     """
     Calculate statistics for search results.
 
