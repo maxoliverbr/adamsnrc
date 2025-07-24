@@ -336,8 +336,16 @@ class VersionBumper:
             # Remove empty sections
             notes = re.sub(r'### \w+\n\s*\n', '', notes)
             notes = re.sub(r'\n\s*\n\s*\n', '\n\n', notes)
-
-            return notes if notes else f"Release version {version}"
+            
+            # Clean up any remaining empty lines
+            notes = re.sub(r'\n\s*\n\s*\n', '\n\n', notes)
+            notes = notes.strip()
+            
+            # If notes are empty or only contain whitespace, provide a default message
+            if not notes or notes.isspace():
+                return f"Release version {version}\n\nThis release includes various improvements and bug fixes."
+            
+            return notes
 
         return f"Release version {version}"
 

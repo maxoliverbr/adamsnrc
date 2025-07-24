@@ -8,16 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.5] - 2025-07-24
 
 ### Added
-- 
+- Ruff linting and formatting integration
+- Automated version bumping script with Git integration
+- GitHub Actions workflows for CI/CD
 
 ### Changed
-- 
+- Migrated from black/flake8 to ruff for code quality
+- Updated Python version requirements to 3.9+
+- Improved exception handling with proper chaining
 
 ### Fixed
-- 
+- Python version compatibility issues in CI
+- Typing annotations using modern Python syntax
+- Code formatting and linting issues
 
 ### Removed
-- 
+- Deprecated typing imports (Dict, List, Tuple)
+- Legacy black and flake8 configurations
 
 
 ## [2.0.4] - 2025-07-24
