@@ -1,2 +1,0 @@
-[console_scripts]
-adamsnrc = adamsnrc.cli:main
