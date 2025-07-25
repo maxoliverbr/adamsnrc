@@ -106,6 +106,7 @@ from .helpers import (
     search_documents_by_title,
     search_documents_by_title_exact,
     search_documents_by_title_and_type,
+    search_documents_by_content,
     search_nureg_by_title,
     search_letters_by_title,
     search_reports_by_title,
@@ -175,8 +176,9 @@ __all__ = [
     "build_search_query",
     # Helper functions
     "search_documents_by_title",
-    "search_documents_by_title_exact",
+    "search_documents_by_title_exact", 
     "search_documents_by_title_and_type",
+    "search_documents_by_content",
     "search_nureg_by_title",
     "search_letters_by_title",
     "search_reports_by_title",

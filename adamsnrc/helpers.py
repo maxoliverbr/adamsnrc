@@ -57,6 +57,8 @@ def search_documents_by_title(search_string: str,
     
     try:
         # Build search query targeting title field
+        # Note: This searches specifically in document titles, which may return fewer results
+        # than content search. For broader results, use search_documents_by_content()
         builder = SearchQueryBuilder()
         builder.add_property_and("Title", SearchOperator.CONTAINS, search_string.strip())
         builder.sort_by(SortField.TITLE, SortOrder.ASCENDING)
@@ -76,11 +78,16 @@ def search_documents_by_title(search_string: str,
                 logger.warning(f"Reached max_results limit of {max_results}, truncating results")
                 break
                 
-            title = doc_data.get("Title", "").strip()
+            # Content search results use "DocumentTitle" field instead of "Title"
+            title = (doc_data.get("DocumentTitle", "") or 
+                    doc_data.get("Title", "") or
+                    doc_data.get("title", "") or 
+                    f"Document {doc_data.get('AccessionNumber', 'Unknown')}").strip()
+            
             doc_id = doc_data.get("AccessionNumber", "").strip()
             
-            # Only include documents that have both title and ID
-            if title and doc_id:
+            # Only include documents that have an ID (title might be generated)
+            if doc_id:
                 # Handle duplicate titles by appending the ID
                 if title in title_id_map:
                     # If we already have this title, create a unique key
@@ -92,7 +99,7 @@ def search_documents_by_title(search_string: str,
                 
                 processed_count += 1
             else:
-                logger.debug(f"Skipping document with missing title or ID: title='{title}', id='{doc_id}'")
+                logger.warning(f"Skipping document with missing AccessionNumber: id='{doc_id}', available_fields={list(doc_data.keys())}")
         
         logger.info(f"Processed {processed_count} documents, returning {len(title_id_map)} title-ID mappings")
         return title_id_map
@@ -331,4 +338,98 @@ def search_reports_by_title(search_string: str,
     Returns:
         Dict[str, str]: Dictionary mapping report titles to their AccessionNumbers
     """
-    return search_documents_by_title_and_type(search_string, "Report", client, max_results) 
+    return search_documents_by_title_and_type(search_string, "Report", client, max_results)
+
+
+def search_documents_by_content(search_string: str, 
+                               client: Optional[ADAMSClient] = None,
+                               max_results: int = 100) -> Dict[str, str]:
+    """
+    Search for documents that contain a specific string in their content (not just title).
+    
+    This function performs a full-text content search, which is more likely to return
+    results than title-only searches. Use this when you want to find documents that
+    mention a topic anywhere in their content.
+    
+    Args:
+        search_string (str): The string to search for in document content
+        client (Optional[ADAMSClient], optional): ADAMS client instance to use.
+            If None, uses the default client. Defaults to None.
+        max_results (int, optional): Maximum number of results to process.
+            Defaults to 100.
+    
+    Returns:
+        Dict[str, str]: Dictionary mapping document titles to their AccessionNumbers
+            (IDs). Format: {"Document Title": "AccessionNumber"}
+    
+    Raises:
+        ADAMSError: If the search fails
+        ValueError: If search_string is empty or None
+    
+    Example:
+        >>> title_id_map = search_documents_by_content("steam generator")
+        >>> for title, doc_id in title_id_map.items():
+        ...     print(f"Title: {title}")
+        ...     print(f"ID: {doc_id}")
+        ...     print("---")
+    """
+    if not search_string or not search_string.strip():
+        raise ValueError("search_string cannot be empty or None")
+    
+    # Use provided client or get default
+    if client is None:
+        client = get_default_client()
+    
+    try:
+        # Build search query using content search (searches within document content)
+        builder = SearchQueryBuilder()
+        builder.content_search(search_string.strip())
+        builder.sort_by(SortField.TITLE, SortOrder.ASCENDING)
+        
+        # Execute search
+        query = builder.build()
+        result = client.search_with_retry(query, max_retries=3)
+        
+        logger.info(f"Found {result.count} documents with '{search_string}' in content")
+        
+        # Build title to ID mapping
+        title_id_map = {}
+        processed_count = 0
+        
+        for doc_data in result.results:
+            if processed_count >= max_results:
+                logger.warning(f"Reached max_results limit of {max_results}, truncating results")
+                break
+                
+            # Content search results use "DocumentTitle" field instead of "Title"
+            title = (doc_data.get("DocumentTitle", "") or 
+                    doc_data.get("Title", "") or
+                    doc_data.get("title", "") or 
+                    f"Document {doc_data.get('AccessionNumber', 'Unknown')}").strip()
+            
+            doc_id = doc_data.get("AccessionNumber", "").strip()
+            
+            # Only include documents that have an ID (title might be generated)
+            if doc_id:
+                # Handle duplicate titles by appending the ID
+                if title in title_id_map:
+                    # If we already have this title, create a unique key
+                    unique_title = f"{title} ({doc_id})"
+                    title_id_map[unique_title] = doc_id
+                    logger.debug(f"Duplicate title found, using unique key: {unique_title}")
+                else:
+                    title_id_map[title] = doc_id
+                
+                processed_count += 1
+            else:
+                logger.warning(f"Skipping document with missing AccessionNumber: id='{doc_id}', available_fields={list(doc_data.keys())}")
+        
+        logger.info(f"Processed {processed_count} documents, returning {len(title_id_map)} title-ID mappings")
+        return title_id_map
+        
+    except ADAMSError as e:
+        logger.error(f"Content search failed for '{search_string}': {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in content search for '{search_string}': {e}")
+        raise ADAMSError(f"Unexpected error in search_documents_by_content: {e}") from e 

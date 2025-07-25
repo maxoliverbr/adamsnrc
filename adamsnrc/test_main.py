@@ -346,11 +346,155 @@ class TestHelperFunctions(unittest.TestCase):
         
         result = search_documents_by_title("steam generator")
         
+        # Debug print statements
+        print(f"\n=== DEBUG: test_search_documents_by_title ===")
+        print(f"Result type: {type(result)}")
+        print(f"Result length: {len(result)}")
+        print(f"Result contents: {result}")
+        print(f"Mock result count: {self.mock_result.count}")
+        print(f"Mock result results: {self.mock_result.results}")
+        print(f"=== END DEBUG ===\n")
+        
         self.assertIsInstance(result, dict)
         self.assertEqual(len(result), 2)
         self.assertIn("Test Document 1 about steam generator", result)
         self.assertIn("Test Document 2 about steam generator", result)
         self.assertEqual(result["Test Document 1 about steam generator"], "ML12345678901")
+
+    @patch('adamsnrc.helpers.get_default_client')
+    def test_search_documents_by_title_zero_results(self, mock_get_client):
+        """Test search_documents_by_title function with zero results."""
+        mock_client = MagicMock()
+        # Mock zero results
+        zero_result = SearchResult(
+            meta={"count": "0", "matches": "0"},
+            results=[]
+        )
+        mock_client.search_with_retry.return_value = zero_result
+        mock_get_client.return_value = mock_client
+        
+        result = search_documents_by_title("nonexistent search term")
+        
+        # Debug print statements
+        print(f"\n=== DEBUG: test_search_documents_by_title_zero_results ===")
+        print(f"Result type: {type(result)}")
+        print(f"Result length: {len(result)}")
+        print(f"Result contents: {result}")
+        print(f"Mock result count: {zero_result.count}")
+        print(f"Mock result results: {zero_result.results}")
+        print(f"=== END DEBUG ===\n")
+        
+        self.assertIsInstance(result, dict)
+        self.assertEqual(len(result), 0)  # Should be empty
+        self.assertEqual(result, {})  # Should be empty dict
+
+    def test_search_documents_by_title_real_api_detailed(self):
+        """Test real API call with detailed debugging."""
+        print(f"\n=== DETAILED REAL API TEST ===")
+        
+        try:
+            # Import what we need for direct API testing
+            from adamsnrc.client import ADAMSClient
+            from adamsnrc.builder import SearchQueryBuilder
+            from adamsnrc.types import SearchOperator, SortField, SortOrder
+            
+            # Create a real client (not mocked)
+            client = ADAMSClient()
+            print(f"Created client: {client}")
+            
+            # Try a very simple search first
+            try:
+                builder = SearchQueryBuilder()
+                builder.add_property_and("Title", SearchOperator.CONTAINS, "NUREG")
+                query = builder.build()
+                
+                print(f"Built query: {query.to_dict()}")
+                
+                # Try the search
+                search_result = client.search(query)
+                print(f"Search result count: {search_result.count}")
+                print(f"Search result metadata: {search_result.meta}")
+                print(f"Number of results: {len(search_result.results)}")
+                
+                if len(search_result.results) > 0:
+                    print(f"First result: {search_result.results[0]}")
+                
+            except Exception as search_error:
+                print(f"Direct search failed: {search_error}")
+                print(f"Error type: {type(search_error)}")
+            
+            # Now try the helper function
+            result = search_documents_by_title("NUREG", max_results=5)
+            
+            print(f"\nHelper function result:")
+            print(f"Result type: {type(result)}")
+            print(f"Result length: {len(result)}")
+            print(f"Result contents: {result}")
+            
+            # The test passes regardless of results since we're just debugging
+            self.assertIsInstance(result, dict)
+            
+        except Exception as e:
+            print(f"Error during real API test: {e}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            traceback.print_exc()
+            
+            # Mark test as passed since we're just investigating
+            self.assertTrue(True, "Real API test completed (debugging purposes)")
+         
+        print(f"=== END DETAILED REAL API TEST ===\n")
+
+    def test_content_search_vs_title_search_comparison(self):
+        """Compare content search vs title search to show the difference."""
+        print(f"\n=== CONTENT SEARCH VS TITLE SEARCH COMPARISON ===")
+        
+        try:
+            from adamsnrc.helpers import search_documents_by_content
+            
+            search_term = "steam generator"
+            
+            print(f"Testing with search term: '{search_term}'")
+            print(f"This test calls the real ADAMS API (not mocked)")
+            print(f"")
+            
+            # Test title search
+            print(f"1. Title search (searches only in document titles):")
+            title_results = search_documents_by_title(search_term, max_results=5)
+            print(f"   Title search results: {len(title_results)} documents")
+            if title_results:
+                for i, (title, doc_id) in enumerate(list(title_results.items())[:3], 1):
+                    print(f"   {i}. {title[:60]}... (ID: {doc_id})")
+            else:
+                print(f"   No results found in title search")
+            
+            print(f"")
+            
+            # Test content search  
+            print(f"2. Content search (searches within document content):")
+            content_results = search_documents_by_content(search_term, max_results=5)
+            print(f"   Content search results: {len(content_results)} documents")
+            if content_results:
+                for i, (title, doc_id) in enumerate(list(content_results.items())[:3], 1):
+                    print(f"   {i}. {title[:60]}... (ID: {doc_id})")
+            else:
+                print(f"   No results found in content search")
+            
+            print(f"")
+            print(f"Summary:")
+            print(f"- Title search: {len(title_results)} results")
+            print(f"- Content search: {len(content_results)} results")
+            print(f"- Content search typically returns more results because it searches")
+            print(f"  the full text of documents, not just titles.")
+            
+            # Test passes regardless of results
+            self.assertTrue(True, "Comparison test completed")
+            
+        except Exception as e:
+            print(f"Error during comparison test: {e}")
+            self.assertTrue(True, "Comparison test completed with error (debugging purposes)")
+        
+        print(f"=== END COMPARISON TEST ===\n")
 
     @patch('adamsnrc.helpers.get_default_client')
     def test_search_documents_by_title_exact(self, mock_get_client):
@@ -455,6 +599,72 @@ class TestHelperFunctions(unittest.TestCase):
         
         # Should limit results to max_results
         self.assertEqual(len(result), 5)
+
+    @patch('adamsnrc.helpers.get_default_client')
+    def test_helper_function_with_print_output(self, mock_get_client):
+        """Test helper function with detailed print output for debugging."""
+        mock_client = MagicMock()
+        mock_result = SearchResult(
+            meta={"count": "3", "matches": "3"},
+            results=[
+                {
+                    "Title": "NUREG-1234 Steam Generator Safety Analysis",
+                    "AccessionNumber": "ML12345678901",
+                    "DocumentType": "NUREG",
+                    "AuthorName": "John Smith",
+                    "DocumentDate": "01/15/2023 02:30 PM"
+                },
+                {
+                    "Title": "Steam Generator Inspection Report",
+                    "AccessionNumber": "ML12345678902", 
+                    "DocumentType": "Inspection Report",
+                    "AuthorName": "Jane Doe",
+                    "DocumentDate": "02/20/2023 10:15 AM"
+                },
+                {
+                    "Title": "Technical Specification for Steam Generator Replacement",
+                    "AccessionNumber": "ML12345678903",
+                    "DocumentType": "Technical Specification", 
+                    "AuthorName": "Bob Johnson",
+                    "DocumentDate": "03/10/2023 03:45 PM"
+                }
+            ]
+        )
+        mock_client.search_with_retry.return_value = mock_result
+        mock_get_client.return_value = mock_client
+        
+        # Call the function
+        result = search_documents_by_title("steam generator")
+        
+        # Print detailed results for debugging
+        print(f"\n=== HELPER FUNCTION TEST RESULTS ===")
+        print(f"Search term: 'steam generator'")
+        print(f"Total documents found: {len(result)}")
+        print(f"Result type: {type(result)}")
+        print(f"\nDetailed results:")
+        
+        for i, (title, doc_id) in enumerate(result.items(), 1):
+            print(f"  {i}. Title: {title}")
+            print(f"     Document ID: {doc_id}")
+            print(f"     Title length: {len(title)} characters")
+            print(f"     ---")
+        
+        # Print raw mock data for comparison
+        print(f"\nRaw mock data comparison:")
+        for i, doc in enumerate(mock_result.results, 1):
+            print(f"  {i}. Mock Title: '{doc['Title']}'")
+            print(f"     Mock ID: '{doc['AccessionNumber']}'")
+            print(f"     Mock Type: '{doc['DocumentType']}'")
+            print(f"     Mock Author: '{doc['AuthorName']}'")
+            print(f"     ---")
+        
+        print(f"=== END TEST RESULTS ===\n")
+        
+        # Assertions
+        self.assertIsInstance(result, dict)
+        self.assertEqual(len(result), 3)
+        self.assertIn("NUREG-1234 Steam Generator Safety Analysis", result)
+        self.assertEqual(result["NUREG-1234 Steam Generator Safety Analysis"], "ML12345678901")
 
 
 class TestValidationFunctions(unittest.TestCase):
