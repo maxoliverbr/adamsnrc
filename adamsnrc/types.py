@@ -114,6 +114,31 @@ class SearchQuery:
     def add_property_or(self, prop: str, op: SearchOperator, value: Any) -> None:
         """Add a property search with OR logic."""
         self.properties_or.append(PropertySearch(prop, op, value))
+    
+    def to_dict(self) -> dict:
+        """
+        Convert the search query to a dictionary format.
+        
+        Returns:
+            dict: Dictionary representation of the search query
+        """
+        return {
+            "properties_and": [prop.to_tuple() for prop in self.properties_and],
+            "properties_or": [prop.to_tuple() for prop in self.properties_or],
+            "content_search": self.content_search,
+            "date_range": self.date_range.to_tuple() if self.date_range else None,
+            "options": {
+                "public_library": self.options.public_library,
+                "legacy_library": self.options.legacy_library,
+                "added_today": self.options.added_today,
+                "added_this_month": self.options.added_this_month,
+                "within_folder_enable": self.options.within_folder_enable,
+                "within_folder_insubfolder": self.options.within_folder_insubfolder,
+                "within_folder_path": self.options.within_folder_path,
+                "sort_field": self.options.sort_field.value,
+                "sort_order": self.options.sort_order.value,
+            }
+        }
 
 
 @dataclass
