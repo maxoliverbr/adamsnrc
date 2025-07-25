@@ -12,7 +12,7 @@ The package is designed to be coding agent-friendly with:
 - Extensive documentation and examples
 """
 
-__version__ = "2.0.8"
+__version__ = "2.0.9"
 __author__ = "ADAMSNRC Contributors"
 __email__ = "your.email@example.com"
 
