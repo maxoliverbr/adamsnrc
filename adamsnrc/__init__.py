@@ -101,6 +101,16 @@ from .utils import (
     validate_docket_number,
 )
 
+# Import helper functions
+from .helpers import (
+    search_documents_by_title,
+    search_documents_by_title_exact,
+    search_documents_by_title_and_type,
+    search_nureg_by_title,
+    search_letters_by_title,
+    search_reports_by_title,
+)
+
 # Define what gets imported with "from adamsnrc import *"
 __all__ = [
     # Core API
@@ -163,6 +173,13 @@ __all__ = [
     "group_results_by_field",
     "calculate_result_stats",
     "build_search_query",
+    # Helper functions
+    "search_documents_by_title",
+    "search_documents_by_title_exact",
+    "search_documents_by_title_and_type",
+    "search_nureg_by_title",
+    "search_letters_by_title",
+    "search_reports_by_title",
 ]
 
 # Quick start examples for coding agents
@@ -211,6 +228,17 @@ queries = [
 results = client.batch_search(queries)
 for i, result in enumerate(results):
     print(f"Query {i+1}: {result.count} results")
+    """,
+    
+    "title_search": """
+# Search documents by title
+from adamsnrc import search_documents_by_title
+
+title_id_map = search_documents_by_title("steam generator")
+for title, doc_id in title_id_map.items():
+    print(f"Title: {title}")
+    print(f"Document ID: {doc_id}")
+    print("---")
     """
 }
 
