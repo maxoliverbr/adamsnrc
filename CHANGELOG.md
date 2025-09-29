@@ -17,7 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 
 ### Removed
-- 
+- Removed unused imports (`timedelta`, `List`) from examples.py
+- Removed unused variables (`__email__`, `__author__`) from __init__.py
+- Removed unused constants (`QUICK_START_EXAMPLES`, `API_REFERENCE`, `EXAMPLE_PATTERNS`)
+- Removed unused function `build_search_query()` from utils.py
+- Cleaned up approximately 200+ lines of unused code for better maintainability
 
 
 ## [2.0.8] - 2025-07-24
