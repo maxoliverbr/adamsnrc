@@ -12,7 +12,7 @@ The package is designed to be coding agent-friendly with:
 - Extensive documentation and examples
 """
 
-__version__ = "2.0.9"
+__version__ = "2.0.10"
 
 # Import main API functions
 from .main import (
