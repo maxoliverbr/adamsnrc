@@ -6,8 +6,7 @@ in various scenarios, making it easier for coding agents to understand
 and implement different search patterns.
 """
 
-from datetime import datetime, timedelta
-from typing import List
+from datetime import datetime
 
 from .client import ADAMSClient
 from .types import (

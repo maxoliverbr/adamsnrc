@@ -132,31 +132,6 @@ def format_docket_number(docket: str) -> str:
     return digits_only
 
 
-def build_search_query(
-    properties: list[tuple[str, str, Any]], operator: str = "AND"
-) -> str:
-    """
-    Build a search query string from property tuples.
-
-    Args:
-        properties: List of (property, operator, value) tuples
-        operator: Logical operator to join properties ("AND" or "OR")
-
-    Returns:
-        Formatted search query string
-    """
-    if not properties:
-        return ""
-
-    formatted_props = []
-    for prop, op, value in properties:
-        # Escape special characters in value
-        safe_value = escape_special_chars(str(value))
-        formatted_props.append(f"{prop} {op} '{safe_value}'")
-
-    return f" {operator} ".join(formatted_props)
-
-
 def extract_metadata_from_result(result: dict[str, str]) -> dict[str, Any]:
     """
     Extract and parse metadata from a search result.
