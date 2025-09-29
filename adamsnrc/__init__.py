@@ -13,8 +13,6 @@ The package is designed to be coding agent-friendly with:
 """
 
 __version__ = "2.0.9"
-__author__ = "ADAMSNRC Contributors"
-__email__ = "your.email@example.com"
 
 # Import main API functions
 from .main import (
@@ -69,7 +67,6 @@ from .builder import (
     inspection_report_search,
     author_search,
     docket_search,
-    EXAMPLE_PATTERNS,
 )
 
 # Import client class
@@ -84,7 +81,6 @@ from .client import (
 from .utils import (
     # Date and time utilities
     build_date_range,
-    build_search_query,
     calculate_result_stats,
     escape_special_chars,
     # Result processing
@@ -154,7 +150,6 @@ __all__ = [
     "inspection_report_search",
     "author_search",
     "docket_search",
-    "EXAMPLE_PATTERNS",
     # Client class
     "ADAMSClient",
     "create_client",
@@ -173,7 +168,6 @@ __all__ = [
     "filter_results_by_date",
     "group_results_by_field",
     "calculate_result_stats",
-    "build_search_query",
     # Helper functions
     "search_documents_by_title",
     "search_documents_by_title_exact", 
@@ -184,99 +178,3 @@ __all__ = [
     "search_reports_by_title",
 ]
 
-# Quick start examples for coding agents
-QUICK_START_EXAMPLES = {
-    "basic_usage": """
-# Basic usage with client
-from adamsnrc import ADAMSClient
-
-client = ADAMSClient()
-result = client.search_nureg("steam generator")
-print(f"Found {result.count} NUREG documents")
-    """,
-    
-    "builder_pattern": """
-# Using the builder pattern
-from adamsnrc import SearchQueryBuilder, SortField, SortOrder
-
-builder = SearchQueryBuilder()
-    .nureg_documents()
-    .content_search("steam generator")
-    .sort_by(SortField.DOCUMENT_DATE, SortOrder.DESCENDING)
-
-query = builder.build()
-result = client.search(query)
-    """,
-    
-    "type_safe_search": """
-# Type-safe search with enums
-from adamsnrc import SearchOperator, DocumentType
-
-builder = SearchQueryBuilder()
-    .add_property_and("DocumentType", SearchOperator.EQUALS, DocumentType.NUREG)
-    .add_property_and("AuthorName", SearchOperator.STARTS_WITH, "Macfarlane")
-
-result = client.search(builder.build())
-    """,
-    
-    "batch_search": """
-# Batch search multiple queries
-queries = [
-    SearchQueryBuilder().nureg_documents().build(),
-    SearchQueryBuilder().part_21_correspondence().build(),
-    SearchQueryBuilder().inspection_reports().build(),
-]
-
-results = client.batch_search(queries)
-for i, result in enumerate(results):
-    print(f"Query {i+1}: {result.count} results")
-    """,
-    
-    "title_search": """
-# Search documents by title
-from adamsnrc import search_documents_by_title
-
-title_id_map = search_documents_by_title("steam generator")
-for title, doc_id in title_id_map.items():
-    print(f"Title: {title}")
-    print(f"Document ID: {doc_id}")
-    print("---")
-    """
-}
-
-# API field reference for coding agents
-API_REFERENCE = {
-    "search_operators": {
-        "eq": "Equals (exact match)",
-        "starts": "Starts with",
-        "ends": "Ends with",
-        "contains": "Contains (substring match)",
-        "infolder": "In folder (path-based search)",
-        "range": "Range (for dates and numbers)"
-    },
-    "sort_fields": {
-        "DocumentDate": "Sort by document creation date",
-        "$title": "Sort by document title", 
-        "$size": "Sort by file size",
-        "AuthorName": "Sort by author name",
-        "DocumentType": "Sort by document type",
-        "PublishDatePARS": "Sort by publication date",
-        "DocketNumber": "Sort by docket number",
-        "AccessionNumber": "Sort by accession number",
-        "Subject": "Sort by subject"
-    },
-    "document_fields": {
-        "AccessionNumber": "Unique identifier for the document",
-        "Title": "Document title",
-        "DocumentType": "Type of document (NUREG, Letter, etc.)",
-        "AuthorName": "Name of the document author",
-        "AuthorAffiliation": "Author's organizational affiliation",
-        "DocketNumber": "NRC docket number",
-        "Subject": "Document subject",
-        "DocumentDate": "Date the document was created",
-        "PublishDatePARS": "Date the document was published",
-        "Size": "File size in bytes",
-        "FileName": "Original filename",
-        "URL": "Direct link to the document"
-    }
-}
