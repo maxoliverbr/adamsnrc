@@ -108,6 +108,21 @@ from .helpers import (
     search_reports_by_title,
 )
 
+# Import abstraction layer
+from .abstractions import (
+    SimpleADAMSClient,
+    QuickSearch,
+    SearchTemplate,
+    SimpleSearchRequest,
+    SearchFilters,
+    quick_search,
+    find_nureg,
+    find_letters,
+    find_safety_docs,
+    find_recent_docs,
+    get_author_stats,
+)
+
 # Define what gets imported with "from adamsnrc import *"
 __all__ = [
     # Core API
@@ -176,5 +191,17 @@ __all__ = [
     "search_nureg_by_title",
     "search_letters_by_title",
     "search_reports_by_title",
+    # Abstraction layer
+    "SimpleADAMSClient",
+    "QuickSearch",
+    "SearchTemplate",
+    "SimpleSearchRequest",
+    "SearchFilters",
+    "quick_search",
+    "find_nureg",
+    "find_letters",
+    "find_safety_docs",
+    "find_recent_docs",
+    "get_author_stats",
 ]
 
