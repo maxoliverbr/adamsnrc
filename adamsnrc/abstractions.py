@@ -11,9 +11,9 @@ from datetime import datetime, date
 from dataclasses import dataclass
 
 from .client import ADAMSClient
+from .builder import SearchQueryBuilder
 from .types import (
     SearchQuery,
-    SearchQueryBuilder,
     SortField,
     SortOrder,
     SearchOperator,
