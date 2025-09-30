@@ -132,7 +132,7 @@ class VersionBumper:
             print(f"❌ No version found in {self.init_py}")
             return False
 
-    def update_changelog(self, new_version: str, dry_run: bool = False) -> bool:
+    def update_changelog(self, new_version: str, dry_run: bool = False, interactive: bool = False) -> bool:
         """Add version entry to CHANGELOG.md."""
         changelog_path = self.project_root / "CHANGELOG.md"
         if not changelog_path.exists():
@@ -148,7 +148,35 @@ class VersionBumper:
 
         # Add new version entry after the first ## [ line
         today = self._get_today_date()
-        new_entry = f"""## [{new_version}] - {today}
+        
+        if interactive and not dry_run:
+            # Interactive mode: prompt for changelog content
+            print(f"\n📝 Please provide changelog content for version {new_version}:")
+            print("(Leave empty and press Enter to skip a section)")
+            
+            added = self._prompt_changelog_section("Added")
+            changed = self._prompt_changelog_section("Changed") 
+            fixed = self._prompt_changelog_section("Fixed")
+            removed = self._prompt_changelog_section("Removed")
+            
+            new_entry = f"""## [{new_version}] - {today}
+
+### Added
+{added}
+
+### Changed
+{changed}
+
+### Fixed
+{fixed}
+
+### Removed
+{removed}
+
+"""
+        else:
+            # Non-interactive mode: create empty template
+            new_entry = f"""## [{new_version}] - {today}
 
 ### Added
 - 
@@ -185,12 +213,30 @@ class VersionBumper:
             print("❌ Could not find version section in CHANGELOG.md")
             return False
 
+    def _prompt_changelog_section(self, section_name: str) -> str:
+        """Prompt user for changelog section content."""
+        print(f"\n{section_name} (one item per line, empty line to finish):")
+        items = []
+        while True:
+            try:
+                line = input("  - ").strip()
+                if not line:
+                    break
+                items.append(f"- {line}")
+            except (EOFError, KeyboardInterrupt):
+                break
+        
+        if items:
+            return "\n".join(items) + "\n"
+        else:
+            return "- \n"
+
     def _get_today_date(self) -> str:
         """Get today's date in YYYY-MM-DD format."""
         from datetime import datetime
         return datetime.now().strftime("%Y-%m-%d")
 
-    def bump(self, bump_type: str, dry_run: bool = False, auto_git: bool = False) -> tuple[str, str]:
+    def bump(self, bump_type: str, dry_run: bool = False, auto_git: bool = False, interactive: bool = False) -> tuple[str, str]:
         """Main method to bump version across all files."""
         current_version = self.get_current_version()
         new_version = self.bump_version(current_version, bump_type)
@@ -211,7 +257,7 @@ class VersionBumper:
         if self.update_init_py(new_version, dry_run):
             changes_made.append("adamsnrc/__init__.py")
 
-        if self.update_changelog(new_version, dry_run):
+        if self.update_changelog(new_version, dry_run, interactive):
             changes_made.append("CHANGELOG.md")
 
         print()
@@ -382,6 +428,12 @@ Examples:
         help="Automatically run git commands and create GitHub release"
     )
 
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Interactive mode: prompt for changelog content during version bump"
+    )
+
     args = parser.parse_args()
 
     # Find project root (directory containing pyproject.toml)
@@ -393,7 +445,7 @@ Examples:
 
     try:
         bumper = VersionBumper(project_root)
-        old_version, new_version = bumper.bump(args.bump_type, args.dry_run, args.auto_git)
+        old_version, new_version = bumper.bump(args.bump_type, args.dry_run, args.auto_git, args.interactive)
 
         if not args.dry_run and not args.auto_git:
             print()

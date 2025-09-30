@@ -17,13 +17,14 @@ echo "=================================="
 # Show usage if no arguments provided
 if [ $# -eq 0 ]; then
     echo -e "${YELLOW}Usage:${NC}"
-    echo "  ./bump.sh [major|minor|patch] [--dry-run] [--auto-git]"
+    echo "  ./bump.sh [major|minor|patch] [--dry-run] [--auto-git] [--interactive]"
     echo ""
     echo -e "${YELLOW}Examples:${NC}"
     echo "  ./bump.sh patch                    # Bump patch version"
     echo "  ./bump.sh minor --dry-run          # Preview minor version bump"
     echo "  ./bump.sh patch --auto-git         # Bump version + run git commands"
     echo "  ./bump.sh major --auto-git         # Complete release workflow"
+    echo "  ./bump.sh patch --interactive      # Interactive changelog entry"
     echo ""
     exit 1
 fi
