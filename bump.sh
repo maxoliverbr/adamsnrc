@@ -17,7 +17,7 @@ echo "=================================="
 # Show usage if no arguments provided
 if [ $# -eq 0 ]; then
     echo -e "${YELLOW}Usage:${NC}"
-    echo "  ./bump.sh [major|minor|patch] [--dry-run] [--auto-git] [--interactive]"
+    echo "  ./bump.sh [major|minor|patch] [--dry-run] [--auto-git] [--interactive] [--test-pypi] [--production-pypi]"
     echo ""
     echo -e "${YELLOW}Examples:${NC}"
     echo "  ./bump.sh patch                    # Bump patch version"
@@ -25,6 +25,8 @@ if [ $# -eq 0 ]; then
     echo "  ./bump.sh patch --auto-git         # Bump version + run git commands"
     echo "  ./bump.sh major --auto-git         # Complete release workflow"
     echo "  ./bump.sh patch --interactive      # Interactive changelog entry"
+    echo "  ./bump.sh patch --test-pypi        # Bump version + trigger Test PyPI publish"
+    echo "  ./bump.sh minor --production-pypi  # Bump version + trigger Production PyPI publish"
     echo ""
     exit 1
 fi
@@ -47,7 +49,7 @@ fi
 python bump_version.py "$@"
 
 # If successful and not a dry run, show additional helpful commands
-if [ $? -eq 0 ] && [[ "$*" != *"--dry-run"* ]] && [[ "$*" != *"--auto-git"* ]]; then
+if [ $? -eq 0 ] && [[ "$*" != *"--dry-run"* ]] && [[ "$*" != *"--auto-git"* ]] && [[ "$*" != *"--test-pypi"* ]] && [[ "$*" != *"--production-pypi"* ]]; then
     echo ""
     echo -e "${GREEN}🎉 Version bump completed successfully!${NC}"
     echo ""
@@ -58,5 +60,8 @@ if [ $? -eq 0 ] && [[ "$*" != *"--dry-run"* ]] && [[ "$*" != *"--auto-git"* ]]; 
     echo "  git commit -m 'bump version'  # Commit changes"
     echo "  git push origin main          # Push to remote"
     echo ""
-    echo -e "${BLUE}💡 Tip: Use --auto-git to automate all git commands!${NC}"
+    echo -e "${BLUE}💡 Tips:${NC}"
+    echo "  Use --auto-git to automate all git commands!"
+    echo "  Use --test-pypi to publish to Test PyPI after bumping"
+    echo "  Use --production-pypi to publish to Production PyPI after bumping"
 fi 

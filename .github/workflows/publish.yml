@@ -1,6 +1,8 @@
-name: Publish to PyPI
+# This workflow is deprecated - use test-pypi-publish.yml or production-pypi-publish.yml instead
+name: Publish to PyPI (Deprecated)
 
 on:
+  workflow_dispatch:  # Only allow manual triggering
   release:
     types: [published]
 
@@ -23,7 +25,7 @@ jobs:
     - name: Build package
       run: python -m build
     
-    - name: Publish to Test PyPI
+    - name: Publish to Test PyPI (Default)
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}

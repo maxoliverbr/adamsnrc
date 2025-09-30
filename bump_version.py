@@ -236,7 +236,7 @@ class VersionBumper:
         from datetime import datetime
         return datetime.now().strftime("%Y-%m-%d")
 
-    def bump(self, bump_type: str, dry_run: bool = False, auto_git: bool = False, interactive: bool = False) -> tuple[str, str]:
+    def bump(self, bump_type: str, dry_run: bool = False, auto_git: bool = False, interactive: bool = False, test_pypi: bool = False, production_pypi: bool = False) -> tuple[str, str]:
         """Main method to bump version across all files."""
         current_version = self.get_current_version()
         new_version = self.bump_version(current_version, bump_type)
@@ -270,6 +270,12 @@ class VersionBumper:
             # Run git commands if auto_git is enabled
             if auto_git and changes_made:
                 self._run_git_commands(current_version, new_version, dry_run)
+
+            # Handle PyPI publishing triggers
+            if test_pypi and not dry_run:
+                self._trigger_pypi_workflow("test", new_version)
+            elif production_pypi and not dry_run:
+                self._trigger_pypi_workflow("production", new_version)
 
         return current_version, new_version
 
@@ -395,6 +401,69 @@ class VersionBumper:
 
         return f"Release version {version}"
 
+    def _trigger_pypi_workflow(self, workflow_type: str, version: str):
+        """Trigger GitHub workflow for PyPI publishing."""
+        import subprocess
+        import os
+
+        print()
+        print(f"🚀 Triggering {workflow_type} PyPI publishing workflow...")
+
+        # Check if gh CLI is available
+        try:
+            subprocess.run(["gh", "--version"], capture_output=True, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print(f"   ❌ GitHub CLI (gh) not found. Cannot trigger {workflow_type} PyPI workflow.")
+            print("   💡 Install GitHub CLI: https://cli.github.com/")
+            print(f"   💡 Or manually trigger the workflow: {workflow_type}-pypi-publish")
+            return
+
+        # Determine workflow file based on type
+        workflow_file = f".github/workflows/{workflow_type}-pypi-publish.yml"
+        
+        try:
+            # Trigger the workflow using GitHub CLI
+            cmd = [
+                "gh", "workflow", "run", f"{workflow_type}-pypi-publish.yml",
+                "--ref", "main"
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            print(f"   ✅ Successfully triggered {workflow_type} PyPI workflow")
+            if result.stdout.strip():
+                print(f"      {result.stdout.strip()}")
+            
+            print(f"   🔍 You can monitor the workflow at:")
+            print(f"      https://github.com/{self._get_repo_owner_slash_name()}/actions")
+
+        except subprocess.CalledProcessError as e:
+            print(f"   ❌ Error triggering {workflow_type} PyPI workflow: {e.stderr.strip()}")
+            print(f"   💡 Make sure the workflow file exists: {workflow_file}")
+            print(f"   💡 Or manually trigger the workflow on GitHub")
+
+    def _get_repo_owner_slash_name(self) -> str:
+        """Get repository owner/name from git remote."""
+        import subprocess
+        
+        try:
+            result = subprocess.run(
+                ["git", "remote", "get-url", "origin"], 
+                capture_output=True, text=True, check=True
+            )
+            url = result.stdout.strip()
+            
+            # Handle both SSH and HTTPS URLs
+            if url.startswith("git@"):
+                # SSH: git@github.com:owner/repo.git
+                return url.split(":")[1].replace(".git", "")
+            elif "github.com" in url:
+                # HTTPS: https://github.com/owner/repo.git
+                return url.split("github.com/")[1].replace(".git", "")
+            else:
+                return "unknown/unknown"
+        except subprocess.CalledProcessError:
+            return "unknown/unknown"
+
 
 def main():
     """Main entry point."""
@@ -407,6 +476,8 @@ Examples:
   python bump_version.py minor          # 2.0.0 -> 2.1.0  
   python bump_version.py major          # 2.0.0 -> 3.0.0
   python bump_version.py patch --dry-run # Show what would change
+  python bump_version.py patch --test-pypi # Bump version + trigger Test PyPI
+  python bump_version.py minor --production-pypi # Bump version + trigger Production PyPI
         """
     )
 
@@ -434,6 +505,18 @@ Examples:
         help="Interactive mode: prompt for changelog content during version bump"
     )
 
+    parser.add_argument(
+        "--test-pypi",
+        action="store_true",
+        help="Trigger Test PyPI publishing workflow after version bump"
+    )
+
+    parser.add_argument(
+        "--production-pypi",
+        action="store_true",
+        help="Trigger Production PyPI publishing workflow after version bump"
+    )
+
     args = parser.parse_args()
 
     # Find project root (directory containing pyproject.toml)
@@ -445,7 +528,14 @@ Examples:
 
     try:
         bumper = VersionBumper(project_root)
-        old_version, new_version = bumper.bump(args.bump_type, args.dry_run, args.auto_git, args.interactive)
+        old_version, new_version = bumper.bump(
+            args.bump_type, 
+            args.dry_run, 
+            args.auto_git, 
+            args.interactive,
+            args.test_pypi,
+            args.production_pypi
+        )
 
         if not args.dry_run and not args.auto_git:
             print()
