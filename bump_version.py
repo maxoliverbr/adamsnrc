@@ -66,9 +66,11 @@ class VersionBumper:
 
         # Update version line
         content = re.sub(
-            r'(version\s*=\s*["\'])[^"\']+(["\'])',
+            r'^(version\s*=\s*["\'])[^"\']+(["\'])',
             rf'\g<1>{new_version}\g<2>',
-            content
+            content,
+            count=1,
+            flags=re.MULTILINE,
         )
 
         if content != old_content:
