@@ -26,7 +26,7 @@ setup(
     description="A robust Python client for the Nuclear Regulatory Commission's ADAMS API",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/adamsnrc",
+    url="https://github.com/maxoliverbr/adamsnrc",
     packages=find_packages(exclude=[
         "*.tests*",
         "*.test*",
@@ -86,6 +86,6 @@ setup(
     project_urls={
         "Bug Reports": "https://github.com/maxoliverbr/adamsnrc/issues",
         "Source": "https://github.com/maxoliverbr/adamsnrc",
-        "Documentation": "https://adamsnrc.readthedocs.io/",
+        "Documentation": "https://github.com/maxoliverbr/adamsnrc#readme",
     },
 )

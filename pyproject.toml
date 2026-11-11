@@ -55,7 +55,7 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/maxoliverbr/adamsnrc"
-Documentation = "https://adamsnrc.readthedocs.io/"
+Documentation = "https://github.com/maxoliverbr/adamsnrc#readme"
 Repository = "https://github.com/maxoliverbr/adamsnrc"
 "Bug Tracker" = "https://github.com/maxoliverbr/adamsnrc/issues"
 
