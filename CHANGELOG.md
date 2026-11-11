@@ -5,13 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.13] - 2025-09-29
+## [2.0.13] - 2025-09-30
 
 ### Added
 - 
 
 ### Changed
-- 
+- Publish workflow now deploys to Test PyPI instead of PyPI
+- Version bumped to 2.0.13
 
 ### Fixed
 - 
@@ -20,13 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 
 
-## [2.0.12] - 2025-09-29
+## [2.0.12] - 2025-09-30
 
 ### Added
-- 
+- Interactive mode for changelog entries during version bump (`bump_version.py`)
+- `build_and_publish.py` build/publish helper script
+- `publish.sh` release script
+- `PYPI_SETUP.md` PyPI publishing guide
 
 ### Changed
-- 
+- Version bumped to 2.0.12
 
 ### Fixed
 - 
@@ -35,13 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 
 
 
-## [2.0.11] - 2025-09-29
+## [2.0.11] - 2025-09-30
 
 ### Added
 - 
 
 ### Changed
-- 
+- Version bumped to 2.0.11
 
 ### Fixed
 - 

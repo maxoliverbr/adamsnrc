@@ -287,6 +287,7 @@ We use semantic versioning (MAJOR.MINOR.PATCH):
 - **Issues**: Use GitHub Issues for bug reports and feature requests
 - **Discussions**: Use GitHub Discussions for questions and general discussion
 - **Email**: Contact maintainers directly for sensitive issues
+- **Maintainer**: Max Oliver, CTO 3Flux.com
 
 ## Code of Conduct
 

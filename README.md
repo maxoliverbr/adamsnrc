@@ -8,6 +8,10 @@ The result after many interactions and minor code edits is this package.
 
 A robust Python client for the Nuclear Regulatory Commission's ADAMS (Agencywide Documents Access and Management System) API.
 
+## Author
+
+**Name:** Max Oliver, CTO 3Flux.com
+
 ## Features
 
 - **Type Safety**: Full type hints for better IDE support and code clarity
