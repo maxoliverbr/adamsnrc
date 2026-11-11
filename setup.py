@@ -20,7 +20,7 @@ def read_requirements():
 
 setup(
     name="adamsnrc",
-    version="2.0.13",
+    version="2.0.14",
     author="Max Oliver",
     author_email="max.oliver@cintrax.com.br",
     description="A robust Python client for the Nuclear Regulatory Commission's ADAMS API",
@@ -86,6 +86,6 @@ setup(
     project_urls={
         "Bug Reports": "https://github.com/maxoliverbr/adamsnrc/issues",
         "Source": "https://github.com/maxoliverbr/adamsnrc",
-        "Documentation": "https://github.com/maxoliverbr/adamsnrc#readme",
+        "Documentation": "https://maxoliverbr.github.io/adamsnrc/",
     },
 )
