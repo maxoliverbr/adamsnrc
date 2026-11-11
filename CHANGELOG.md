@@ -358,4 +358,4 @@ The package has been completely refactored. Here are the key changes:
 
 ## Contributing
 
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to this project. 
+Please see [CONTRIBUTING.md](https://github.com/maxoliverbr/adamsnrc/blob/main/CONTRIBUTING.md) for details on how to contribute to this project. 
