@@ -13,4 +13,5 @@ guides/abstraction-guide
 guides/coding-agent-guide
 guides/contributing
 guides/publishing
+guides/changelog
 ```
