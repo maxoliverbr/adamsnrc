@@ -37,7 +37,8 @@ jobs:
           python -m pip install sphinx sphinx-rtd-theme myst-parser
 
       - name: Build docs
-        run: sphinx-build -b html -W --keep-going docs _site/docs
+        run: |
+          sphinx-build -b html -W --keep-going docs _site/docs
           cp landing/index.html _site/index.html
 
       - uses: actions/configure-pages@v5
