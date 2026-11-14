@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "landing/**"
       - "adamsnrc/**"
       - "*.md"
       - ".github/workflows/docs.yml"
@@ -36,13 +37,14 @@ jobs:
           python -m pip install sphinx sphinx-rtd-theme myst-parser
 
       - name: Build docs
-        run: sphinx-build -b html -W --keep-going docs docs/_build/html
+        run: sphinx-build -b html -W --keep-going docs _site/docs
+          cp landing/index.html _site/index.html
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/_build/html
+          path: _site
 
   deploy:
     needs: build
