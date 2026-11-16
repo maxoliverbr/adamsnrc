@@ -68,7 +68,7 @@ class PropertySearch:
     
     def to_tuple(self) -> tuple[str, str, Any]:
         """Convert to tuple format for API calls."""
-        return (self.property_name, self.operator.value, self.value)
+        return (self.property_name, getattr(self.operator, "value", self.operator), self.value)
 
 
 @dataclass
@@ -177,60 +177,6 @@ class DocumentMetadata:
             file_name=data.get("FileName"),
             url=data.get("URL"),
         )
-
-
-@dataclass
-class SearchStatistics:
-    """Statistics about search results."""
-    total_results: int
-    unique_authors: int
-    unique_document_types: int
-    date_range: Optional[Dict[str, datetime]] = None
-    average_size: float = 0.0
-    size_distribution: Dict[str, int] = field(default_factory=dict)
-    document_type_distribution: Dict[str, int] = field(default_factory=dict)
-    author_distribution: Dict[str, int] = field(default_factory=dict)
-
-
-@dataclass
-class SearchResult:
-    """Enhanced search result with structured data."""
-    metadata: Dict[str, str]
-    results: List[Dict[str, str]]
-    documents: List[DocumentMetadata] = field(default_factory=list)
-    statistics: Optional[SearchStatistics] = None
-    
-    def __post_init__(self) -> None:
-        """Initialize structured data after creation."""
-        # Convert raw results to DocumentMetadata objects
-        self.documents = [DocumentMetadata.from_dict(result) for result in self.results]
-        
-        # Calculate statistics
-        from .utils import calculate_result_stats
-        stats_data = calculate_result_stats(self.results)
-        self.statistics = SearchStatistics(
-            total_results=stats_data["total_results"],
-            unique_authors=stats_data["unique_authors"],
-            unique_document_types=stats_data["unique_document_types"],
-            date_range=stats_data["date_range"],
-            average_size=stats_data["average_size"],
-        )
-    
-    @property
-    def count(self) -> int:
-        """Return the count as an integer."""
-        try:
-            return int(self.metadata.get("count", "0"))
-        except (ValueError, TypeError):
-            return 0
-
-    @property
-    def matches(self) -> int:
-        """Return the matches as an integer."""
-        try:
-            return int(self.metadata.get("matches", "0"))
-        except (ValueError, TypeError):
-            return 0
 
 
 # Type aliases for better code readability

@@ -20,7 +20,7 @@ def main():
             sort="DocumentDate",
             order="DESC"
         )
-        print(f"   Found {result.count} NUREG documents about steam generators")
+        print(f"   Found {result.count} NUREG documents about early site permits")
 
         # Example 2: Show result structure
         print("\n2. Result structure:")

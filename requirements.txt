@@ -1,4 +1,0 @@
-requests>=2.34.0
-typing-extensions>=4.16.0
-pytest>=9.1.0
-pytest-mock>=3.17.0 

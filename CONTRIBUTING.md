@@ -8,7 +8,7 @@ Thank you for your interest in contributing to ADAMSNRC! This document provides 
 
 - Python 3.9 or higher
 - Git
-- pip
+- [uv](https://docs.astral.sh/uv/)
 
 ### Development Setup
 
@@ -18,21 +18,18 @@ Thank you for your interest in contributing to ADAMSNRC! This document provides 
    cd adamsnrc
    ```
 
-2. **Create a virtual environment**
+2. **Install development dependencies** (creates `.venv` automatically)
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   uv sync --extra dev
    ```
 
-3. **Install development dependencies**
+3. **Run tests to ensure everything works**
    ```bash
-   pip install -e ".[dev]"
+   uv run pytest
    ```
 
-4. **Run tests to ensure everything works**
-   ```bash
-   pytest
-   ```
+   The suite runs offline. To also hit the real ADAMS API: `ADAMS_LIVE=1 uv run pytest -m integration`.
+   Known library bugs are pinned as strict `xfail` tests in `test_coverage.py::TestKnownBugs`; remove the marker when you fix one.
 
 ## Development Workflow
 
@@ -63,13 +60,13 @@ black adamsnrc/
 flake8 adamsnrc/
 
 # Type checking
-mypy adamsnrc/
+uv run mypy adamsnrc/
 
 # Run tests
-pytest
+uv run pytest
 
 # Run tests with coverage
-pytest --cov=adamsnrc --cov-report=html
+uv run pytest --cov=adamsnrc --cov-report=html
 ```
 
 ### 4. Commit Your Changes
@@ -272,7 +269,6 @@ We use semantic versioning (MAJOR.MINOR.PATCH):
 ### Creating a Release
 
 1. Update version in:
-   - `setup.py`
    - `pyproject.toml`
    - `adamsnrc/__init__.py`
 

@@ -25,8 +25,6 @@ h1 span{background:linear-gradient(90deg,var(--a) 10%,#a3b84a 50%,var(--b));-web
 .btn{padding:12px 22px;border-radius:10px;font-weight:600;border:1px solid var(--line);background:var(--card);transition:transform .15s}
 .btn:hover{transform:translateY(-2px)}
 .btn.p{background:var(--a);color:#042f2a;border:0}.btn{border-radius:12px;padding:16px 32px;font-size:18px}
-.pip{display:inline-flex;gap:12px;align-items:center;padding:10px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:14px ui-monospace,Menlo,monospace}
-.pip button{border:0;background:none;color:var(--a);cursor:pointer;font:inherit}
 pre{margin:0;padding:22px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:auto;font:14px/1.7 ui-monospace,Menlo,monospace;text-align:left}
 .k{color:var(--b)}.s{color:var(--a)}.c{color:var(--mut)}
 .code{max-width:760px;margin:40px auto 0;box-shadow:0 30px 80px -30px color-mix(in srgb,var(--a) 40%,transparent)}
@@ -49,7 +47,6 @@ footer{border-top:1px solid var(--line);padding:28px 0;color:var(--mut);font-siz
 <h1>NRC nuclear documents, <span>one function call away.</span></h1>
 <p>A typed, validated Python client for the NRC ADAMS API. NUREGs, letters, inspection reports and Part 21 notices — searched in minutes.</p>
 <div class="cta"><a class="btn p" href="#start">Get started</a><a class="btn" href="https://github.com/maxoliverbr/adamsnrc">View on GitHub</a><a class="btn" href="docs/">Documentation</a></div>
-<div class="pip"><span>$ pip install adamsnrc</span><button onclick="navigator.clipboard.writeText('pip install adamsnrc');this.textContent='copied'">copy</button></div>
 <pre class="code"><span class="k">from</span> adamsnrc.main <span class="k">import</span> content_search
 
 result = content_search(
@@ -87,7 +84,7 @@ export ADAMS_LOG_LEVEL=<span class="s">INFO</span></pre>
 </div>
 </section>
 
-<footer><span>MIT licensed · by Max Oliver</span><span><a href="docs/">Docs</a> · <a href="https://pypi.org/project/adamsnrc/">PyPI</a> · <a href="https://github.com/maxoliverbr/adamsnrc">GitHub</a></span></footer>
+<footer><span>MIT licensed · by Max Oliver</span><span><a href="docs/">Docs</a> · <a href="https://github.com/maxoliverbr/adamsnrc">GitHub</a></span></footer>
 </div>
 </body>
 </html>

@@ -26,7 +26,7 @@ A robust Python client for the Nuclear Regulatory Commission's ADAMS (Agencywide
 ## Installation
 
 ```bash
-pip install -r requirements.txt
+uv pip install .
 ```
 
 ## Quick Start
@@ -290,13 +290,13 @@ except Exception as e:
 Run the test suite:
 
 ```bash
-python -m pytest adamsnrc/test_main.py -v
+uv run pytest adamsnrc/test_main.py -v
 ```
 
 Or run specific test classes:
 
 ```bash
-python -m pytest adamsnrc/test_main.py::TestSearchFunctions -v
+uv run pytest adamsnrc/test_main.py::TestSearchFunctions -v
 ```
 
 ## Logging
