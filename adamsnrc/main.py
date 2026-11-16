@@ -611,6 +611,41 @@ def part21_search_content(
     )
 
 
+def _advanced_with_base(
+    name: str,
+    base: list[tuple[str, str, Any]],
+    extra_all: Optional[list[tuple[str, str, Any]]],
+    extra_any: Optional[list[tuple[str, str, Any]]],
+    date_range: Optional[tuple[str, str]],
+    sort: str,
+    order: str,
+) -> SearchResult:
+    """Advanced search with a fixed base filter, optional extras and a PublishDatePARS range."""
+    try:
+        if date_range:
+            validate_date_range(date_range)
+
+        formatted = []
+        if date_range:
+            left, right = (quote_plus(d) for d in date_range)
+            formatted.append(f"!(PublishDatePARS,range,(left:'{left}',right:'{right}'),'' )")
+        formatted += [_kv(*t) for t in base + (extra_all or [])]
+        any_props = [_kv(*t) for t in (extra_any or [])]
+
+        inner = [
+            _filters(public_library=True),
+            _options(within_folder_enable=False),
+            f"properties_search_all:!({_join(formatted)})",
+            f"properties_search_any:{_wrap_list(any_props)}",
+        ]
+        params = _build_query("advanced-search-pars", sort, order)
+        return _do_request(_mode_sections(",".join(inner)), **params)
+    except ADAMSError:
+        raise
+    except Exception as e:
+        raise ADAMSError(f"Unexpected error in {name}: {e}") from e
+
+
 def part21_search_advanced(
     extra_all: Optional[list[tuple[str, str, Any]]] = None,
     extra_any: Optional[list[tuple[str, str, Any]]] = None,
@@ -619,79 +654,16 @@ def part21_search_advanced(
     order: str = "ASC",
 ) -> SearchResult:
     """
-    Search for Part 21 Correspondence documents using advanced search.
-    
-    This function is a convenience wrapper around advanced_search that automatically
-    filters for Part 21 Correspondence documents and supports date range filtering.
-    
-    Args:
-        extra_all (Optional[list[tuple[str, str, Any]]], optional): 
-            Additional property tuples for AND conditions beyond the base Part 21 filter.
-            Each tuple should contain (property_name, operator, search_value).
-            Defaults to None.
-        extra_any (Optional[list[tuple[str, str, Any]]], optional): 
-            Additional property tuples for OR conditions.
-            Each tuple should contain (property_name, operator, search_value).
-            Defaults to None.
-        date_range (Optional[tuple[str, str]], optional): 
-            Date range tuple (start_date, end_date) for filtering by publish date.
-            Both dates should be strings in a format accepted by the ADAMS API.
-            Defaults to None.
-        sort (str, optional): 
-            Field to sort results by. Defaults to "$title".
-        order (str, optional): 
-            Sort order - "ASC" for ascending, "DESC" for descending. Defaults to "ASC".
+    Advanced search for Part 21 Correspondence.
 
-    Returns:
-        SearchResult: Object containing search metadata and results list
-
-    Raises:
-        ADAMSValidationError: If any parameters are invalid
-        ADAMSRequestError: If the API request fails
-        ADAMSParseError: If the API response cannot be parsed
+    ``extra_all`` / ``extra_any`` are extra (property, operator, value) AND / OR
+    conditions; ``date_range`` is (start, end) on the publish date.
     """
-    try:
-        if date_range:
-            validate_date_range(date_range)
-
-        base = [("DocumentType", "eq", "Part 21 Correspondence")]
-        props = base + (extra_all or [])
-
-        if date_range:
-            left, right = date_range
-            left = quote_plus(left)
-            right = quote_plus(right)
-            props.append(
-                ("PublishDatePARS", f"range,(left:'{left}',right:'{right}')", "")
-            )
-
-        # Handle the range syntax hack:
-        formatted = []
-        for p, op, v in props:
-            if op.startswith("range,("):
-                # already formatted, keep literal
-                formatted.append(f"!({p},range,{op.split('range,', 1)[1]},'')")
-            elif op.startswith("range"):
-                # If someone passed like ("PublishDatePARS","range",(left,right)), ignore.
-                raise ADAMSValidationError(
-                    "Use date_range=... or hand-build the range tuple string."
-                )
-            else:
-                formatted.append(_kv(p, op, v))
-
-        any_props = [_kv(*t) for t in (extra_any or [])]
-
-        return advanced_search(
-            properties_search_all=None if not formatted else [],
-            properties_search_any=any_props,
-            sort=sort,
-            order=order,
-        )
-
-    except ADAMSError:
-        raise
-    except Exception as e:
-        raise ADAMSError(f"Unexpected error in part21_search_advanced: {e}") from e
+    return _advanced_with_base(
+        "part21_search_advanced",
+        [("DocumentType", "ends", "Part 21 Correspondence")],
+        extra_all, extra_any, date_range, sort, order,
+    )
 
 
 def operating_reactor_ir_search_content(
@@ -753,120 +725,13 @@ def operating_reactor_ir_search_advanced(
     order: str = "ASC",
 ) -> SearchResult:
     """
-    Search for Operating Reactor Inspection Reports using advanced search.
-    
-    This function is a convenience wrapper around advanced_search that automatically
-    filters for inspection reports from operating reactors (DocketNumber starting with 05000)
-    and supports date range filtering.
-    
-    Args:
-        extra_all (Optional[list[tuple[str, str, Any]]], optional): 
-            Additional property tuples for AND conditions beyond the base inspection report filter.
-            Each tuple should contain (property_name, operator, search_value).
-            Defaults to None.
-        extra_any (Optional[list[tuple[str, str, Any]]], optional): 
-            Additional property tuples for OR conditions.
-            Each tuple should contain (property_name, operator, search_value).
-            Defaults to None.
-        date_range (Optional[tuple[str, str]], optional): 
-            Date range tuple (start_date, end_date) for filtering by publish date.
-            Both dates should be strings in a format accepted by the ADAMS API.
-            Defaults to None.
-        sort (str, optional): 
-            Field to sort results by. Defaults to "$title".
-        order (str, optional): 
-            Sort order - "ASC" for ascending, "DESC" for descending. Defaults to "ASC".
+    Advanced search for operating-reactor inspection reports (docket 05000*).
 
-    Returns:
-        SearchResult: Object containing search metadata and results list
-
-    Raises:
-        ADAMSError: If any parameters are invalid or an unexpected error occurs
+    ``extra_all`` / ``extra_any`` are extra (property, operator, value) AND / OR
+    conditions; ``date_range`` is (start, end) on the publish date.
     """
-    try:
-        if date_range:
-            validate_date_range(date_range)
-
-        base = [
-            ("DocumentType", "starts", "inspection report"),
-            ("DocketNumber", "starts", "05000"),
-        ]
-        props = base + (extra_all or [])
-
-        formatted = []
-        if date_range:
-            left, right = date_range
-            left = quote_plus(left)
-            right = quote_plus(right)
-            formatted.append(
-                f"!(PublishDatePARS,range,(left:'{left}',right:'{right}'),'' )"
-            )
-
-        # append the normal ones
-        formatted += [_kv(*t) for t in props]
-        any_props = [_kv(*t) for t in (extra_any or [])]
-
-        inner_parts = [
-            _filters(public_library=True),
-            _options(within_folder_enable=False),
-            f"properties_search_all:!({_join(formatted)})",
-            f"properties_search_any:{_wrap_list(any_props)}",
-        ]
-        q = _mode_sections(",".join(inner_parts))
-        params = _build_query("advanced-search-pars", sort, order)
-        return _do_request(q, **params)
-
-    except Exception as e:
-        raise ADAMSError(
-            f"Unexpected error in operating_reactor_ir_search_advanced: {e}"
-        ) from e
-
-
-# ---------------------------
-# Quick examples (commented)
-# ---------------------------
-
-if __name__ == "__main__":
-    try:
-        # 1) Simple content search
-        result = content_search(
-            properties_search=[("DocumentType", "ends", "NUREG")],
-            single_content_search="steam generator",
-            sort="DocumentDate",
-            order="DESC",
-        )
-        print(f"Content search -> {result.count} results")
-
-        # 2) Advanced search example
-        result = advanced_search(
-            properties_search_all=[
-                ("AuthorName", "starts", "Macfarlane"),
-                ("DocumentType", "starts", "Speech"),
-            ],
-            sort="$title",
-            order="ASC",
-        )
-        print(f"Advanced search -> {result.count} results")
-
-        # 3) Part 21 content search example
-        result = part21_search_content(
-            extra_and=[("AuthorAffiliation", "infolder", "NRC/NRR")],
-            text="safety valve",
-            sort="$size",
-            order="DESC",
-        )
-        print(f"Part 21 (content) -> {result.count} results")
-
-        # 4) Operating reactor inspection report content search
-        result = operating_reactor_ir_search_content(
-            extra_and=[("AuthorAffiliation", "infolder", "NRC/NRR")],
-            text="safety valve",
-            sort="$size",
-            order="DESC",
-        )
-        print(f"OR IR (content) -> {result.count} results")
-
-    except ADAMSError as e:
-        print(f"ADAMS API error: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+    return _advanced_with_base(
+        "operating_reactor_ir_search_advanced",
+        [("DocumentType", "starts", "inspection report"), ("DocketNumber", "starts", "05000")],
+        extra_all, extra_any, date_range, sort, order,
+    )

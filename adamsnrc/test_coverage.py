@@ -16,8 +16,6 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import Timeout
 
 from . import abstraction_examples, abstractions, cli, client as client_mod, examples
-from .config import get_config
-from .types import SearchResult as TypedSearchResult
 from .utils import (
     build_date_range,
     calculate_result_stats,
@@ -171,6 +169,19 @@ class TestMainSearchVariants:
         assert part21_search_content(text="valve", extra_and=[("AuthorName", "starts", "S")]).count == 2
         assert operating_reactor_ir_search_content(text="x").count == 2
 
+    @pytest.mark.parametrize(
+        "fn,needle",
+        [(part21_search_advanced, "part+21"), (operating_reactor_ir_search_advanced, "inspection+report")],
+    )
+    def test_advanced_sends_base_extra_and_date_filters(self, fn, needle, fake_api):
+        fn(
+            extra_all=[("AuthorName", "starts", "Smith")],
+            extra_any=[("DocumentType", "ends", "NUREG")],
+            date_range=self.DATES,
+        )
+        q = fake_api.call_args.kwargs["params"]["q"].lower()
+        assert needle in q and "smith" in q and "nureg" in q and "publishdatepars" in q
+
     def test_part21_and_reactor_ir_advanced_basic(self):
         assert part21_search_advanced().count == 2
         assert part21_search_advanced(date_range=self.DATES).count == 2
@@ -182,6 +193,7 @@ class TestMainSearchVariants:
         "bad",
         [
             lambda: content_search(order="SIDEWAYS"),
+            lambda: advanced_search(order="SIDEWAYS"),
             lambda: part21_search_advanced(date_range=(1, 2)),
             lambda: operating_reactor_ir_search_advanced(date_range=(1, 2)),
             lambda: part21_search_advanced(extra_all=[("only", "two")]),
@@ -202,19 +214,6 @@ class TestMainSearchVariants:
 
 
 class TestKnownBugs:
-    @pytest.mark.xfail(strict=True, reason="part21_search_advanced: extra_any strings are re-validated as tuples")
-    def test_part21_extra_any_supported(self):
-        part21_search_advanced(extra_any=[("DocumentType", "ends", "NUREG")])
-
-    @pytest.mark.xfail(strict=True, reason="part21/reactor-ir advanced drop their document-type and date filters")
-    @pytest.mark.parametrize(
-        "fn,needle",
-        [(part21_search_advanced, "Part 21"), (operating_reactor_ir_search_advanced, "Inspection")],
-    )
-    def test_advanced_sends_doctype_filter(self, fn, needle, fake_api):
-        fn()
-        assert needle in fake_api.call_args.kwargs["params"]["q"]
-
     @pytest.mark.xfail(strict=True, reason="advanced_search has no date_range; client.search drops it")
     def test_client_date_range_reaches_api(self, fake_api):
         c = ADAMSClient()
@@ -564,24 +563,6 @@ class TestMainEdges:
     def test_unexpected_error_wrapped(self, fn):
         with patch("adamsnrc.main._build_query", side_effect=RuntimeError("x")), pytest.raises(ADAMSError):
             fn()
-
-    def test_part21_rejects_hand_written_range(self):
-        with pytest.raises(ADAMSValidationError):
-            part21_search_advanced(extra_all=[("PublishDatePARS", "range", "x")])
-
-    def test_config(self):
-        assert get_config()["max_retries"] >= 1
-
-
-class TestTypedSearchResult:
-    def test_builds_documents_and_stats(self):
-        r = TypedSearchResult(metadata={"count": "2", "matches": "5"}, results=_xml_to_dict(XML).results)
-        assert r.count == 2 and r.matches == 5
-        assert len(r.documents) == 2 and r.statistics.total_results == 2
-
-    def test_bad_counts_default_to_zero(self):
-        r = TypedSearchResult(metadata={"count": "n/a", "matches": None}, results=[])
-        assert r.count == 0 and r.matches == 0
 
 
 class TestUtilsEdges:

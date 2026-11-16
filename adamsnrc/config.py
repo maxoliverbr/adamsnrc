@@ -54,23 +54,3 @@ ERROR_MESSAGES = {
     "xml_parse_error": "Failed to parse XML response: {error}",
     "validation_error": "Validation error: {error}",
 }
-
-
-def get_config() -> dict[str, Any]:
-    """Get all configuration settings as a dictionary."""
-    return {
-        "base_url": BASE_URL,
-        "default_timeout": DEFAULT_TIMEOUT,
-        "max_retries": MAX_RETRIES,
-        "retry_delay": RETRY_DELAY,
-        "log_level": LOG_LEVEL,
-        "log_format": LOG_FORMAT,
-        "valid_orders": VALID_ORDERS,
-        "valid_sorts": VALID_SORTS,
-        "default_sort": DEFAULT_SORT,
-        "default_order": DEFAULT_ORDER,
-        "default_tab": DEFAULT_TAB,
-        "default_qn": DEFAULT_QN,
-        "default_headers": DEFAULT_HEADERS,
-        "error_messages": ERROR_MESSAGES,
-    }
