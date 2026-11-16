@@ -16,6 +16,14 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import Timeout
 
 from . import abstraction_examples, abstractions, cli, client as client_mod, examples
+from .config import get_config
+from .types import SearchResult as TypedSearchResult
+from .utils import (
+    build_date_range,
+    calculate_result_stats,
+    extract_metadata_from_result,
+    filter_results_by_date,
+)
 from .abstractions import QuickSearch, SearchTemplate, SimpleADAMSClient
 from .client import ADAMSClient
 from .helpers import (
@@ -522,3 +530,193 @@ def test_example_functions_run_offline(mod, names):
     assert names
     for name in names:
         _run(getattr(mod, name))
+
+
+# ---------------------------------------------------------------- remaining branches
+
+from datetime import datetime  # noqa: E402
+
+from .main import _kv, validate_property_tuple  # noqa: E402
+
+
+class TestMainEdges:
+    def test_property_tuple_needs_strings(self):
+        with pytest.raises(ADAMSValidationError):
+            validate_property_tuple((1, "eq", "x"))
+
+    def test_kv_wraps_formatting_errors(self):
+        class Bad:
+            def __str__(self):
+                raise RuntimeError("no")
+
+        with pytest.raises(ADAMSValidationError):
+            _kv("p", "eq", Bad())
+
+    def test_private_library_flag(self, fake_api):
+        advanced_search(public_library=False)
+        assert "public-library:!f" in fake_api.call_args.kwargs["params"]["q"]
+
+    def test_unexpected_xml_error_wrapped(self):
+        with patch("adamsnrc.main.ET.fromstring", side_effect=RuntimeError("x")), pytest.raises(ADAMSParseError):
+            _xml_to_dict("<a/>")
+
+    @pytest.mark.parametrize("fn", [content_search, advanced_search])
+    def test_unexpected_error_wrapped(self, fn):
+        with patch("adamsnrc.main._build_query", side_effect=RuntimeError("x")), pytest.raises(ADAMSError):
+            fn()
+
+    def test_part21_rejects_hand_written_range(self):
+        with pytest.raises(ADAMSValidationError):
+            part21_search_advanced(extra_all=[("PublishDatePARS", "range", "x")])
+
+    def test_config(self):
+        assert get_config()["max_retries"] >= 1
+
+
+class TestTypedSearchResult:
+    def test_builds_documents_and_stats(self):
+        r = TypedSearchResult(metadata={"count": "2", "matches": "5"}, results=_xml_to_dict(XML).results)
+        assert r.count == 2 and r.matches == 5
+        assert len(r.documents) == 2 and r.statistics.total_results == 2
+
+    def test_bad_counts_default_to_zero(self):
+        r = TypedSearchResult(metadata={"count": "n/a", "matches": None}, results=[])
+        assert r.count == 0 and r.matches == 0
+
+
+class TestUtilsEdges:
+    def test_build_date_range_rejects_bad_type(self):
+        with pytest.raises(ValueError):
+            build_date_range(123, "01/01/2023 12:00 AM")
+
+    def test_extract_metadata_bad_values(self):
+        m = extract_metadata_from_result({"DocumentDate": "nope", "Size": "big", "X": "y"})
+        assert m == {"DocumentDate_parsed": None, "Size_parsed": 0, "X": "y"}
+
+    def test_filter_by_date(self):
+        rows = [
+            {"DocumentDate": "01/15/2023 12:00 AM"},
+            {"DocumentDate": "06/01/2023 12:00 AM"},
+            {"DocumentDate": "garbage"},
+            {},
+        ]
+        assert filter_results_by_date(rows) == rows  # no bounds: untouched
+        got = filter_results_by_date(rows, start_date=datetime(2023, 3, 1), end_date=datetime(2023, 12, 1))
+        assert got == [rows[1]]
+        assert filter_results_by_date(rows, end_date=datetime(2023, 3, 1)) == [rows[0]]
+
+    def test_stats_empty_and_dirty(self):
+        assert calculate_result_stats([])["total_results"] == 0
+        s = calculate_result_stats([{"DocumentDate": "bad", "Size": "bad", "AuthorName": "A"}])
+        assert s["unique_authors"] == 1 and s["average_size"] == 0
+
+
+class TestHelperEdges:
+    def _client(self, **kw):
+        c = MagicMock()
+        c.search_with_retry.side_effect = kw.get("error")
+        c.search_with_retry.return_value = kw.get("result")
+        return c
+
+    @pytest.mark.parametrize(
+        "fn",
+        [
+            search_documents_by_title,
+            search_documents_by_title_exact,
+            search_documents_by_content,
+            lambda s, client: search_documents_by_title_and_type(s, "NUREG", client),
+        ],
+    )
+    def test_error_handling(self, fn):
+        with pytest.raises(ADAMSError):
+            fn("x", client=self._client(error=RuntimeError("boom")))
+        with pytest.raises(ADAMSRequestError):
+            fn("x", client=self._client(error=ADAMSRequestError("down")))
+
+    @pytest.mark.parametrize(
+        "fn",
+        [
+            search_documents_by_title,
+            search_documents_by_title_exact,
+            lambda s, **kw: search_documents_by_title_and_type(s, "NUREG", **kw),
+        ],
+    )
+    def test_incomplete_rows_skipped_and_limit(self, fn):
+        rows = [
+            {"Title": "", "AccessionNumber": ""},  # skipped
+            {"Title": "A", "AccessionNumber": "ML1", "DocumentTitle": "A"},
+            {"Title": "A", "AccessionNumber": "ML2", "DocumentTitle": "A"},
+            {"Title": "B", "AccessionNumber": "ML3", "DocumentTitle": "B"},
+        ]
+        res = _xml_to_dict(XML)
+        res.results = rows
+        c = self._client(result=res)
+        assert set(fn("x", client=c).values()) == {"ML1", "ML2", "ML3"}
+        assert len(fn("x", client=c, max_results=1)) == 1
+
+    def test_title_search_skips_missing_id(self):
+        res = _xml_to_dict(XML)
+        res.results = [{"Title": "A"}, {"Title": "B", "AccessionNumber": "ML9"}]
+        assert search_documents_by_title("x", client=self._client(result=res)) == {"B": "ML9"}
+
+
+class TestClientEdges:
+    def test_cache_eviction(self):
+        c = ADAMSClient()
+        c.set_cache_size(1)
+        for w in ("a", "b", "c"):
+            c.search(c.search_builder().content_search(w).build())
+        assert len(c._cache) == 1
+        c.set_cache_size(0)
+        assert len(c._cache) == 0
+
+    def test_unexpected_error_wrapped_and_counted(self):
+        c = ADAMSClient()
+        with patch("adamsnrc.client.content_search", side_effect=RuntimeError("x")), pytest.raises(ADAMSError):
+            c.search(c.search_builder().content_search("a").build())
+        assert c.get_statistics()["error_count"] == 1
+
+    def test_extra_kwargs_applied_to_builder(self):
+        c = ADAMSClient()
+        for call in (c.search_nureg, c.search_part21, c.search_inspection_reports):
+            assert call("x", public_library=True).count == 2
+        assert c.search_by_author("A", public_library=True).count == 2
+        assert c.search_by_docket("1", public_library=True).count == 2
+
+    def test_batch_search_reports_failures_as_none(self, fake_api):
+        c = ADAMSClient()
+        qs = [c.search_builder().content_search(w).build() for w in ("ok", "bad")]
+        fake_api.side_effect = [_response(), RequestsConnectionError("x")]
+        out = c.batch_search(qs)
+        assert out[0].count == 2 and out[1] is None
+
+    def test_retry_does_not_retry_parse_errors(self):
+        c = ADAMSClient()
+        with patch.object(c, "search", side_effect=ADAMSParseError("bad")) as s, pytest.raises(ADAMSParseError):
+            c.search_with_retry(c.search_builder().content_search("a").build(), max_retries=3)
+        assert s.call_count == 1
+
+    def test_default_client_created_lazily(self):
+        client_mod._default_client = None
+        assert isinstance(client_mod.get_default_client(), ADAMSClient)
+
+
+class TestAbstractionEdges:
+    @pytest.mark.parametrize("sort_by", ["date", "title", "author", "other"])
+    @pytest.mark.parametrize("sort_order", ["asc", "desc"])
+    def test_sorting_and_legacy(self, sort_by, sort_order):
+        r = SimpleADAMSClient().find_documents("x", sort_by=sort_by, sort_order=sort_order, include_legacy=True, subject="s")
+        assert r["count"] == 2
+
+
+class TestCliEdges:
+    def test_unknown_type(self):
+        ns = MagicMock(command="search", type="bogus", doc_type=None, author=None, date_start=None, date_end=None)
+        with patch("argparse.ArgumentParser.parse_args", return_value=ns):
+            code, out, _ = run_cli()
+        assert code == 1 and "Unknown search type" in out
+
+    def test_validation_error_message(self):
+        with patch("adamsnrc.cli.content_search", side_effect=ADAMSValidationError("bad")):
+            code, _, err = run_cli("search")
+        assert code == 1 and "Validation error: bad" in err

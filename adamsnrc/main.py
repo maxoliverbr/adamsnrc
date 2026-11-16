@@ -178,7 +178,7 @@ def _kv(prop: str, op: str, value: Any) -> str:
         return f"!({prop},{op},{quote_plus(str(value))},'')"
     except Exception as e:
         raise ADAMSValidationError(
-            f"Error formatting property tuple ({prop}, {op}, {value}): {e}"
+            f"Error formatting property tuple ({prop!r}, {op!r}, {value!r}): {e}"
         ) from e
 
 
@@ -670,8 +670,6 @@ def part21_search_advanced(
         for p, op, v in props:
             if op.startswith("range,("):
                 # already formatted, keep literal
-                formatted.append(f"!({p},range,{op.split('range,', 1)[1]},'')")
-            elif op.startswith("range,(left"):
                 formatted.append(f"!({p},range,{op.split('range,', 1)[1]},'')")
             elif op.startswith("range"):
                 # If someone passed like ("PublishDatePARS","range",(left,right)), ignore.

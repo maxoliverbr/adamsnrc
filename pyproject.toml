@@ -147,3 +147,8 @@ markers = [
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
 ] 
+[tool.coverage.run]
+omit = ["adamsnrc/test_*.py", "adamsnrc/*examples.py"]  # tests and demo scripts
+
+[tool.coverage.report]
+exclude_also = ["if __name__ == .__main__.:"]

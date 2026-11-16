@@ -25,7 +25,7 @@ jobs:
     
     - name: Run tests
       run: |
-        uv run pytest --cov=adamsnrc --cov-report=xml
+        uv run pytest --cov=adamsnrc --cov-report=xml --cov-fail-under=100
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
