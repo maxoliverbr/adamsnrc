@@ -28,6 +28,9 @@ Thank you for your interest in contributing to ADAMSNRC! This document provides 
    uv run pytest
    ```
 
+   The suite runs offline. To also hit the real ADAMS API: `ADAMS_LIVE=1 uv run pytest -m integration`.
+   Known library bugs are pinned as strict `xfail` tests in `test_coverage.py::TestKnownBugs`; remove the marker when you fix one.
+
 ## Development Workflow
 
 ### 1. Create a Feature Branch

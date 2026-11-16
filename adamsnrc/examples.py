@@ -10,6 +10,7 @@ from datetime import datetime
 
 from .client import ADAMSClient, create_client, get_default_client, set_default_client
 from .builder import (
+    SearchQueryBuilder,
     nureg_search,
     part21_search,
     inspection_report_search,
@@ -17,7 +18,6 @@ from .builder import (
     docket_search,
 )
 from .types import (
-    SearchQueryBuilder,
     SearchQuery,
     SortField,
     SortOrder,
@@ -1051,7 +1051,7 @@ def direct_api_wrapper_examples():
     print("\n1. content_search (direct wrapper):")
     
     result = client.content_search(
-        content="steam generator",
+        single_content_search="steam generator",
         properties_search=[("DocumentType", "ends", "NUREG")]
     )
     print(f"Direct content_search found {result.count} NUREG documents about steam generators")
@@ -1060,39 +1060,36 @@ def direct_api_wrapper_examples():
     print("\n2. advanced_search (direct wrapper):")
     
     result = client.advanced_search(
-        properties_and=[("DocumentType", "equals", "Letter")],
-        properties_or=[("Subject", "contains", "safety")],
-        content_search="nuclear power"
+        properties_search_all=[("DocumentType", "ends", "Letter")],
+        properties_search_any=[("Subject", "contains", "safety")],
     )
     print(f"Direct advanced_search found {result.count} letters about safety and nuclear power")
     
     # 3. part21_search_content (direct wrapper)
     print("\n3. part21_search_content (direct wrapper):")
     
-    result = client.part21_search_content("safety valve")
+    result = client.part21_search_content(text="safety valve")
     print(f"Direct part21_search_content found {result.count} Part 21 documents about safety valves")
     
     # 4. part21_search_advanced (direct wrapper)
     print("\n4. part21_search_advanced (direct wrapper):")
     
     result = client.part21_search_advanced(
-        properties_and=[("AuthorAffiliation", "contains", "NRC")],
-        content_search="pressure relief"
+        extra_all=[("AuthorAffiliation", "contains", "NRC")],
     )
     print(f"Direct part21_search_advanced found {result.count} NRC Part 21 documents about pressure relief")
     
     # 5. operating_reactor_ir_search_content (direct wrapper)
     print("\n5. operating_reactor_ir_search_content (direct wrapper):")
     
-    result = client.operating_reactor_ir_search_content("emergency")
+    result = client.operating_reactor_ir_search_content(text="emergency")
     print(f"Direct operating_reactor_ir_search_content found {result.count} inspection reports about emergency")
     
     # 6. operating_reactor_ir_search_advanced (direct wrapper)
     print("\n6. operating_reactor_ir_search_advanced (direct wrapper):")
     
     result = client.operating_reactor_ir_search_advanced(
-        properties_and=[("DocketNumber", "starts", "05000")],
-        content_search="safety systems"
+        extra_all=[("DocketNumber", "starts", "05000")],
     )
     print(f"Direct operating_reactor_ir_search_advanced found {result.count} inspection reports about safety systems")
 
