@@ -6,9 +6,12 @@ nothing touches the network. The opt-in live test is in test_live.py.
 """
 
 import io
+from pathlib import Path
 import json
 import sys
-from contextlib import redirect_stdout
+import re
+import runpy
+from contextlib import redirect_stderr, redirect_stdout
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -209,30 +212,41 @@ class TestMainSearchVariants:
         assert "Nope" in caplog.text
 
 
-# Known bugs, pinned as strict xfail: each one flips to a failure (XPASS) once
-# fixed, which is the signal to delete the marker.
+class TestDateRangeAndCache:
+    def test_advanced_search_sends_date_range(self, fake_api):
+        advanced_search(date_range=("01/01/2023 12:00 AM", "12/31/2023 11:59 PM"))
+        q = fake_api.call_args.kwargs["params"]["q"]
+        assert "PublishDatePARS,range" in q and "2023" in q
 
-
-class TestKnownBugs:
-    @pytest.mark.xfail(strict=True, reason="advanced_search has no date_range; client.search drops it")
     def test_client_date_range_reaches_api(self, fake_api):
         c = ADAMSClient()
         c.search(c.search_builder().date_range("01/01/2023 12:00 AM", "12/31/2023 11:59 PM").build())
-        assert "2023" in fake_api.call_args.kwargs["params"]["q"]
+        assert "PublishDatePARS,range" in fake_api.call_args.kwargs["params"]["q"]
 
-    @pytest.mark.xfail(strict=True, reason="cli --type advanced passes date_range= to advanced_search, which rejects it")
-    def test_cli_advanced_search_runs(self):
-        code, out, _ = run_cli("search", "--type", "advanced")
-        assert code == 0
+    def test_cli_advanced_search_with_dates(self):
+        code, out, _ = run_cli(
+            "search", "--type", "advanced",
+            "--date-start", "01/01/2023 12:00 AM", "--date-end", "12/31/2023 11:59 PM",
+        )
+        assert code == 0 and "Found 2 documents" in out
 
-    @pytest.mark.xfail(strict=True, reason="ADAMSClient.search writes the cache but never reads it")
     def test_client_cache_is_used(self, fake_api):
         c = ADAMSClient()
         q = c.search_builder().content_search("steam").build()
-        c.search(q)
+        first = c.search(q)
         n = fake_api.call_count
+        assert c.search(q) is first and fake_api.call_count == n
+        c.clear_cache()
         c.search(q)
-        assert fake_api.call_count == n
+        assert fake_api.call_count == n + 1
+
+
+class TestPropertySearchTuple:
+    def test_accepts_enum_or_custom_string_operator(self):
+        from .types import PropertySearch, SearchOperator
+
+        assert PropertySearch("T", SearchOperator.CONTAINS, "x").to_tuple() == ("T", "contains", "x")
+        assert PropertySearch("T", "custom_op", "x").to_tuple() == ("T", "custom_op", "x")
 
 
 # ---------------------------------------------------------------- helpers.py
@@ -505,11 +519,22 @@ class TestCliMain:
 # ---------------------------------------------------------------- examples
 
 
+# Messages the demos print when they *swallow* an unexpected exception. The
+# deliberate invalid-input demos ("Caught validation error", "... -> Error: ...")
+# are not in this list.
+SWALLOWED = re.compile(
+    r"❌|Error running|Error during demonstration|Search failed after retries"
+    r"|PropertySearch validation error|DateRange validation error|Traceback"
+)
+
+
 def _run(fn):
     buf = io.StringIO()
-    with redirect_stdout(buf), patch("adamsnrc.main.time.sleep"), patch("time.sleep"):
+    with redirect_stdout(buf), redirect_stderr(buf), patch("time.sleep"):
         fn()
-    return buf.getvalue()
+    out = buf.getvalue()
+    assert not SWALLOWED.search(out), SWALLOWED.search(out).group(0) + " in:\n" + out[-1500:]
+    return out
 
 
 @pytest.mark.parametrize(
@@ -701,3 +726,23 @@ class TestCliEdges:
         with patch("adamsnrc.cli.content_search", side_effect=ADAMSValidationError("bad")):
             code, _, err = run_cli("search")
         assert code == 1 and "Validation error: bad" in err
+
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+@pytest.mark.parametrize(
+    "script,entry",
+    [
+        ("example.py", ["main"]),
+        (
+            "demo_abstractions.py",
+            ["demonstrate_abstraction_levels", "demonstrate_complex_workflows",
+             "demonstrate_analytics", "demonstrate_performance", "main"],
+        ),
+    ],
+)
+def test_root_scripts_run_offline(script, entry):
+    ns = runpy.run_path(str(ROOT / script), run_name="not_main")
+    for name in entry:
+        assert _run(ns[name])

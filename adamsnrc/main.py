@@ -480,6 +480,7 @@ def advanced_search(
     within_folder_path: str = "",
     sort: str = "$title",
     order: str = "ASC",
+    date_range: Optional[tuple[str, str]] = None,
 ) -> SearchResult:
     """
     Perform an advanced search with additional filtering options.
@@ -514,6 +515,9 @@ def advanced_search(
             Field to sort results by. Defaults to "$title".
         order (str, optional): 
             Sort order - "ASC" for ascending, "DESC" for descending. Defaults to "ASC".
+        date_range (Optional[tuple[str, str]], optional):
+            (start, end) filter on the publish date, e.g. ("01/01/2023 12:00 AM",
+            "12/31/2023 11:59 PM"). Defaults to None.
 
     Returns:
         SearchResult: Object containing search metadata and results list
@@ -525,6 +529,9 @@ def advanced_search(
     """
     try:
         # Validate inputs
+        if date_range:
+            validate_date_range(date_range)
+
         if properties_search_all:
             for prop_tuple in properties_search_all:
                 validate_property_tuple(prop_tuple)
@@ -538,6 +545,9 @@ def advanced_search(
 
         # Build query
         props_all = [_kv(*t) for t in (properties_search_all or [])]
+        if date_range:
+            left, right = (quote_plus(d) for d in date_range)
+            props_all.insert(0, f"!(PublishDatePARS,range,(left:'{left}',right:'{right}'),'' )")
         props_any = [_kv(*t) for t in (properties_search_any or [])]
 
         inner_parts = [
@@ -611,39 +621,15 @@ def part21_search_content(
     )
 
 
-def _advanced_with_base(
-    name: str,
-    base: list[tuple[str, str, Any]],
-    extra_all: Optional[list[tuple[str, str, Any]]],
-    extra_any: Optional[list[tuple[str, str, Any]]],
-    date_range: Optional[tuple[str, str]],
-    sort: str,
-    order: str,
-) -> SearchResult:
-    """Advanced search with a fixed base filter, optional extras and a PublishDatePARS range."""
-    try:
-        if date_range:
-            validate_date_range(date_range)
-
-        formatted = []
-        if date_range:
-            left, right = (quote_plus(d) for d in date_range)
-            formatted.append(f"!(PublishDatePARS,range,(left:'{left}',right:'{right}'),'' )")
-        formatted += [_kv(*t) for t in base + (extra_all or [])]
-        any_props = [_kv(*t) for t in (extra_any or [])]
-
-        inner = [
-            _filters(public_library=True),
-            _options(within_folder_enable=False),
-            f"properties_search_all:!({_join(formatted)})",
-            f"properties_search_any:{_wrap_list(any_props)}",
-        ]
-        params = _build_query("advanced-search-pars", sort, order)
-        return _do_request(_mode_sections(",".join(inner)), **params)
-    except ADAMSError:
-        raise
-    except Exception as e:
-        raise ADAMSError(f"Unexpected error in {name}: {e}") from e
+def _advanced_with_base(base, extra_all, extra_any, date_range, sort, order) -> SearchResult:
+    """advanced_search with a fixed base filter."""
+    return advanced_search(
+        properties_search_all=base + (extra_all or []),
+        properties_search_any=extra_any,
+        sort=sort,
+        order=order,
+        date_range=date_range,
+    )
 
 
 def part21_search_advanced(
@@ -660,7 +646,6 @@ def part21_search_advanced(
     conditions; ``date_range`` is (start, end) on the publish date.
     """
     return _advanced_with_base(
-        "part21_search_advanced",
         [("DocumentType", "ends", "Part 21 Correspondence")],
         extra_all, extra_any, date_range, sort, order,
     )
@@ -731,7 +716,6 @@ def operating_reactor_ir_search_advanced(
     conditions; ``date_range`` is (start, end) on the publish date.
     """
     return _advanced_with_base(
-        "operating_reactor_ir_search_advanced",
         [("DocumentType", "starts", "inspection report"), ("DocketNumber", "starts", "05000")],
         extra_all, extra_any, date_range, sort, order,
     )

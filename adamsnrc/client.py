@@ -82,6 +82,10 @@ class ADAMSClient:
         Raises:
             ADAMSError: If the search fails
         """
+        cache_key = self._generate_cache_key(query)
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
         try:
             # Convert SearchQuery to API parameters
             properties_and = [prop.to_tuple() for prop in query.properties_and]
@@ -103,6 +107,7 @@ class ADAMSClient:
                     within_folder_path=query.options.within_folder_path,
                     sort=query.options.sort_field.value,
                     order=query.options.sort_order.value,
+                    date_range=date_range,
                 )
             else:
                 # Use content search
@@ -119,7 +124,6 @@ class ADAMSClient:
             self._last_search_time = datetime.now()
             
             # Cache the result
-            cache_key = self._generate_cache_key(query)
             self._cache[cache_key] = result
             
             # Maintain cache size

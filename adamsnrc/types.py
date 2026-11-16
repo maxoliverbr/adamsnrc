@@ -68,7 +68,7 @@ class PropertySearch:
     
     def to_tuple(self) -> tuple[str, str, Any]:
         """Convert to tuple format for API calls."""
-        return (self.property_name, self.operator.value, self.value)
+        return (self.property_name, getattr(self.operator, "value", self.operator), self.value)
 
 
 @dataclass
