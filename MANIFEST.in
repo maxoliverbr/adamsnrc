@@ -1,8 +1,6 @@
 include README.md
 include LICENSE
-include requirements.txt
 include pyproject.toml
-include setup.py
 
 # Include package data
 recursive-include adamsnrc *.py
